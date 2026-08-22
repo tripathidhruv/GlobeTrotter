@@ -8,6 +8,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { useTrip, type TripActivity, type TripStop } from "./useTrip";
+import { CollaboratorsPanel } from "../collaborators/CollaboratorsPanel";
 
 type ViewMode = "timeline" | "city";
 
@@ -389,6 +390,10 @@ export function ItineraryViewPage() {
   const { data: trip, isLoading, isError } = useTrip(tripId);
   const reduce = useReducedMotion() ?? false;
   const [mode, setMode] = useState<ViewMode>("timeline");
+  const [collabOpen, setCollabOpen] = useState(false);
+  // The trip payload includes ownerId; the shared TripDetail type omits it since
+  // most itinerary views don't need it, so it's read defensively here.
+  const ownerId = (trip as unknown as { ownerId?: string } | undefined)?.ownerId;
 
   const sortedStops = useMemo(
     () => (trip ? [...trip.stops].sort((a, b) => a.orderIndex - b.orderIndex) : []),
@@ -452,9 +457,18 @@ export function ItineraryViewPage() {
           <div className="mx-auto max-w-4xl px-6">
             <div className="-mt-6 flex flex-wrap items-center justify-between gap-4 rounded-sm bg-ink px-5 py-4 text-platform">
               <ModeToggle mode={mode} onChange={setMode} />
-              <div className="text-right font-mono text-xs text-mute">
-                <div className="uppercase tracking-board">Trip total</div>
-                <div className="text-lg text-signal">{money(total)}</div>
+              <div className="flex items-center gap-6">
+                <button
+                  type="button"
+                  onClick={() => setCollabOpen(true)}
+                  className="font-mono text-xs uppercase tracking-board text-platform transition-colors hover:text-signal"
+                >
+                  Collaborators
+                </button>
+                <div className="text-right font-mono text-xs text-mute">
+                  <div className="uppercase tracking-board">Trip total</div>
+                  <div className="text-lg text-signal">{money(total)}</div>
+                </div>
               </div>
             </div>
 
@@ -524,6 +538,13 @@ export function ItineraryViewPage() {
               )}
             </div>
           </div>
+
+          <CollaboratorsPanel
+            tripId={tripId}
+            ownerId={ownerId}
+            open={collabOpen}
+            onClose={() => setCollabOpen(false)}
+          />
         </>
       )}
     </div>
