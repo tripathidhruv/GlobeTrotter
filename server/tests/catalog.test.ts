@@ -11,6 +11,8 @@ beforeAll(async () => {
   const city = await db.city.create({ data: { name: "Lisbon", country: "Portugal", region: "Europe" } });
   cityId = city.id;
   await db.activity.create({ data: { cityId, name: "Fado Night", category: "culture", estCost: 25 } });
+  await db.activity.create({ data: { cityId, name: "Pastéis de Nata Tour", category: "food", estCost: 35 } });
+  await db.activity.create({ data: { cityId, name: "Hike to Sintra", category: "nature", estCost: 15 } });
 });
 
 describe("GET /api/cities", () => {
@@ -26,5 +28,11 @@ describe("GET /api/activities", () => {
     const res = await request(app).get(`/api/activities?city_id=${cityId}`);
     expect(res.status).toBe(200);
     expect(res.body[0].name).toBe("Fado Night");
+  });
+
+  it("ignores invalid cost_max and returns all activities", async () => {
+    const res = await request(app).get(`/api/activities?city_id=${cityId}&cost_max=notanumber`);
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBe(3);
   });
 });
