@@ -13,6 +13,8 @@ import { MyTripsPage } from "./features/trips/MyTripsPage";
 import { CitySearchPage } from "./features/cities/CitySearchPage";
 import { NotFoundPage } from "./features/shared/NotFoundPage";
 import { ItineraryBuilderPage } from "./features/itinerary/ItineraryBuilderPage";
+import { BudgetPage } from "./features/budget/BudgetPage";
+import { ItineraryViewPage } from "./features/itinerary/ItineraryViewPage";
 
 export default function App() {
   useLenis();
@@ -64,11 +66,31 @@ export default function App() {
               }
             />
             <Route
+              path="/trips/:id"
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <ItineraryViewPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/trips/:id/build"
               element={
                 <ProtectedRoute>
                   <AppShell>
                     <ItineraryBuilderPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trips/:id/budget"
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <BudgetPage />
                   </AppShell>
                 </ProtectedRoute>
               }
