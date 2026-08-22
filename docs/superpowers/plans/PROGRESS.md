@@ -5,8 +5,8 @@ Spec: `docs/superpowers/specs/2026-08-22-globetrotter-design.md`
 
 Update this file's checkbox + "Last completed" line after EVERY task finishes (commit lands). If switching Claude accounts/sessions mid-build: open this file first, tell the new session "resume GlobeTrotter build, see docs/superpowers/plans/PROGRESS.md", it picks up at "Next task".
 
-**Last completed:** Task 7 — StopActivity attach/detach + budget service + budget endpoint (commit 457e7cd)
-**Next task:** Task 8 — Design tokens, fonts, Lenis, base UI primitives (first UI task — this is where the frontend/design work begins)
+**Last completed:** Task 8 — Transit design tokens, fonts, Lenis, Button/Card/RouteLine (commit 1e757b0)
+**Next task:** Task 9 — App shell: router, protected routes, page transitions
 
 ## Tasks
 
@@ -17,7 +17,7 @@ Update this file's checkbox + "Last completed" line after EVERY task finishes (c
 - [x] 5. Trip detail/update/delete + Stop CRUD endpoints
 - [x] 6. Cities + Activities search endpoints
 - [x] 7. StopActivity attach/detach + budget service + budget endpoint
-- [ ] 8. Design tokens, fonts, Lenis, base UI primitives
+- [x] 8. Design tokens, fonts, Lenis, base UI primitives
 - [ ] 9. App shell — router, protected routes, page transitions
 - [ ] 10. Auth screens (Login/Signup)
 - [ ] 11. API client + trips query hooks
@@ -56,3 +56,28 @@ Update this file's checkbox + "Last completed" line after EVERY task finishes (c
 - `server/vitest.config.ts` has `fileParallelism: false` (tests run against a real shared Supabase DB with fixed fixture IDs, not an isolated per-test DB) — a stopgap, will need revisiting if the test suite grows much larger (per-test unique IDs or a sandboxed schema would scale better).
 - **Authorization pattern is now established project-wide**: any new route touching trip-scoped data (stops, activities, budget, expenses, calendar, share, collaborators) must add an owner-or-collaborator check, not just `verifySupabaseJwt`. Look at `authorizeStop()` in `server/src/routes/stops.ts` or `server/src/routes/stopActivities.ts` for the pattern (fetch entity -> walk relation chain to `trip.ownerId`/`trip.collaborators` -> 404 if missing, 403 if unauthorized). The plan's briefs from here on (Tasks 19-24 especially) likely still show the literal no-auth-check version from before this pattern existed — apply the same fix proactively rather than waiting for a review to catch it, as we did in Task 7.
 - Server-side (backend) work is now feature-complete through the MVP's data layer. **Task 8 onward is frontend/UI work** — this is the natural point to hand off to a different model for frontend polish, per the user's plan.
+
+## Visual direction change (decided at Task 8, user-approved)
+
+The originally-approved "warm editorial" look (cream `#FBF7F0` + Fraunces serif + terracotta `#C1543A`) was **dropped before any UI was built**. Reason: that exact combination is the single most common AI-generated design default right now, so it risked colliding with other AI-assisted hackathon entries — undercutting the "best UI in the hackathon" goal. It's also a travel-*brochure* language, while GlobeTrotter is a data-dense *planner*.
+
+**Current direction: transit systems** — departure boards, metro maps, rail timetables. Grounded in what a multi-city itinerary actually is: an ordered route.
+
+| Token | Hex | Role |
+|---|---|---|
+| `ink` | `#0E1116` | dark board surface + primary text |
+| `board` | `#2A3138` | secondary board surface |
+| `platform` | `#EFF1F3` | page base (cool enamel grey, not cream) |
+| `rail` | `#D3D8DD` | hairline rules / track lines |
+| `mute` | `#6B747C` | secondary text |
+| `signal` | `#FFB000` | primary accent (departure-board amber) |
+| `transit` | `#1B4DFF` | secondary accent, links |
+
+Type: **Barlow Condensed** (display, uppercase, `tracking-board` 0.08em) · **Inter** (body) · **JetBrains Mono** (all times/costs/durations/stop numbers).
+
+Signature element: **`RouteLine`** (`client/src/components/ui/RouteLine.tsx`) — vertical track with stop nodes, amber line drawn via scroll-driven `scaleY`, nodes igniting on viewport entry. Tasks 12, 15, 17, 19 must consume this, not reinvent it. API: `RouteLine({ stops: RouteStop[], compact?: boolean })` where `RouteStop = { id, label, meta? }`.
+
+**Tasks 9-24 in the plan still contain the OLD cream/terracotta class names in their literal JSX** — the plan's Global Constraints section has a mapping table (`bg-cream`→`bg-platform`, `text-ink/60`→`text-mute`, `border-ink/10`→`border-rail`, `bg-terracotta`→`bg-signal`, `rounded-lg/xl`+`shadow-sm`→`rounded-sm`+`border border-rail`, serif→`font-display uppercase tracking-board`, and Recharts palette → `["#FFB000","#1B4DFF","#0E1116","#6B747C","#2A3138"]`). Apply it every task; no old class name should survive.
+
+- **Tailwind is v4.3.3, not v3** (the plan's Task 8 config assumed v3). Bridged via `@tailwindcss/postcss` + a `@config "../../tailwind.config.ts";` line in `globals.css`. Client code does NOT use `.js` import extensions (that's server-only).
+- `client/` now has a real test runner: `test` script + `vitest.config.ts` + `vitest.setup.ts` (with IntersectionObserver/ResizeObserver stubs, needed because jsdom lacks them and framer-motion's `whileInView`/`useScroll` require them).
