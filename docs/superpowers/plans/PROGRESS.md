@@ -5,8 +5,8 @@ Spec: `docs/superpowers/specs/2026-08-22-globetrotter-design.md`
 
 Update this file's checkbox + "Last completed" line after EVERY task finishes (commit lands). If switching Claude accounts/sessions mid-build: open this file first, tell the new session "resume GlobeTrotter build, see docs/superpowers/plans/PROGRESS.md", it picks up at "Next task".
 
-**Last completed:** Task 6 — Cities + Activities search endpoints (commits 86efc3a, 853e261)
-**Next task:** Task 7 — StopActivity attach/detach + budget service + budget endpoint
+**Last completed:** Task 7 — StopActivity attach/detach + budget service + budget endpoint (commit 457e7cd)
+**Next task:** Task 8 — Design tokens, fonts, Lenis, base UI primitives (first UI task — this is where the frontend/design work begins)
 
 ## Tasks
 
@@ -16,7 +16,7 @@ Update this file's checkbox + "Last completed" line after EVERY task finishes (c
 - [x] 4. Auth middleware + trips list/create endpoints
 - [x] 5. Trip detail/update/delete + Stop CRUD endpoints
 - [x] 6. Cities + Activities search endpoints
-- [ ] 7. StopActivity attach/detach + budget service + budget endpoint
+- [x] 7. StopActivity attach/detach + budget service + budget endpoint
 - [ ] 8. Design tokens, fonts, Lenis, base UI primitives
 - [ ] 9. App shell — router, protected routes, page transitions
 - [ ] 10. Auth screens (Login/Signup)
@@ -54,3 +54,5 @@ Update this file's checkbox + "Last completed" line after EVERY task finishes (c
 - **Plan gap found + fixed (user-approved) in Task 5:** the plan's brief for trip/stop mutation routes had no ownership check — any authenticated user could edit/delete any trip/stop by ID. Fixed: trip metadata PATCH/DELETE is now owner-only; stop PATCH/DELETE and `POST /trips/:id/stops` are owner-or-collaborator; unauthorized GET on a trip returns 403; trip PATCH body uses a `.strict()` zod schema (rejects `ownerId`/`isPublic`/`shareSlug`/`id` in the payload with 400 instead of silently stripping them).
 - **Known follow-up for Task 22 (collaborator roles):** `TripCollaborator.role` (`editor`/`viewer`) exists in the schema but is NOT yet enforced anywhere — any collaborator (even role `viewer`) can currently PATCH/DELETE/create stops. Task 22 should add the role check when it builds out collaborator management, or a dedicated fix should land before demo if viewer-only collaborators are actually used.
 - `server/vitest.config.ts` has `fileParallelism: false` (tests run against a real shared Supabase DB with fixed fixture IDs, not an isolated per-test DB) — a stopgap, will need revisiting if the test suite grows much larger (per-test unique IDs or a sandboxed schema would scale better).
+- **Authorization pattern is now established project-wide**: any new route touching trip-scoped data (stops, activities, budget, expenses, calendar, share, collaborators) must add an owner-or-collaborator check, not just `verifySupabaseJwt`. Look at `authorizeStop()` in `server/src/routes/stops.ts` or `server/src/routes/stopActivities.ts` for the pattern (fetch entity -> walk relation chain to `trip.ownerId`/`trip.collaborators` -> 404 if missing, 403 if unauthorized). The plan's briefs from here on (Tasks 19-24 especially) likely still show the literal no-auth-check version from before this pattern existed — apply the same fix proactively rather than waiting for a review to catch it, as we did in Task 7.
+- Server-side (backend) work is now feature-complete through the MVP's data layer. **Task 8 onward is frontend/UI work** — this is the natural point to hand off to a different model for frontend polish, per the user's plan.
