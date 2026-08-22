@@ -4,3 +4,9 @@ dist/
 .env.local
 .vercel/
 *.log
+
+# Vendor tool/skill docs (auto-installed by CLIs like `prisma init`, not project code)
+.agents/
+.windsurf/
+.cursor/
+skills-lock.json
