@@ -5,12 +5,12 @@ Spec: `docs/superpowers/specs/2026-08-22-globetrotter-design.md`
 
 Update this file's checkbox + "Last completed" line after EVERY task finishes (commit lands). If switching Claude accounts/sessions mid-build: open this file first, tell the new session "resume GlobeTrotter build, see docs/superpowers/plans/PROGRESS.md", it picks up at "Next task".
 
-**Last completed:** none yet
-**Next task:** Task 1 — Monorepo scaffold
+**Last completed:** Task 1 — Monorepo scaffold (commits a414d28..3e62230)
+**Next task:** Task 2 — Prisma schema + seed data
 
 ## Tasks
 
-- [ ] 1. Monorepo scaffold
+- [x] 1. Monorepo scaffold
 - [ ] 2. Prisma schema + seed data
 - [ ] 3. Express app skeleton + Vercel serverless entry
 - [ ] 4. Auth middleware + trips list/create endpoints
@@ -38,4 +38,6 @@ Update this file's checkbox + "Last completed" line after EVERY task finishes (c
 
 ## Notes / deviations from plan
 
-(log anything an implementer changed vs. the written plan here, so a resumed session knows the real state, not just the plan's assumed state)
+- Task 1: Prisma CLI's `prisma init` auto-vendors `.agents/.claude/.windsurf` skill-doc dirs + `skills-lock.json` into `server/` — these got committed once, then removed + gitignored. If future `prisma` commands re-add them, `git status` should show them as ignored, not untracked.
+- Task 1: bumped `@prisma/client` to `^7.9.1` to match the `prisma` CLI devDependency (both must stay same-major going forward).
+- Root `npm test` script will fail on the client workspace until Task 8/9 area adds a `test` script to `client/package.json` (vitest is installed but no script wired yet) — known gap, not yet in scope.
