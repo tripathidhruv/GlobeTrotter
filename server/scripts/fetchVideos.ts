@@ -108,7 +108,7 @@ async function main() {
     )}&per_page=1&orientation=landscape`;
 
     const res = await fetch(searchUrl, {
-      headers: { Authorization: PEXELS_API_KEY },
+      headers: { Authorization: PEXELS_API_KEY ?? "" },
     });
 
     if (!res.ok) {
