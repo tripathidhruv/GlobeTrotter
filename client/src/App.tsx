@@ -1,10 +1,11 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import queryClient from "./lib/queryClient";
 import { useLenis } from "./lib/lenis";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AppShell } from "./components/layout/AppShell";
+import { PageTransition } from "./components/layout/PageTransition";
 import { LoginPage } from "./features/auth/LoginPage";
 import { SignupPage } from "./features/auth/SignupPage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
@@ -15,14 +16,13 @@ import { NotFoundPage } from "./features/shared/NotFoundPage";
 import { ItineraryBuilderPage } from "./features/itinerary/ItineraryBuilderPage";
 import { BudgetPage } from "./features/budget/BudgetPage";
 import { ItineraryViewPage } from "./features/itinerary/ItineraryViewPage";
+import { CalendarPage } from "./features/calendar/CalendarPage";
 
-export default function App() {
-  useLenis();
+function AnimatedRoutes() {
+  const location = useLocation();
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AnimatePresence mode="wait">
-          <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route
@@ -30,7 +30,9 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <AppShell>
+                    <PageTransition>
                     <DashboardPage />
+                  </PageTransition>
                   </AppShell>
                 </ProtectedRoute>
               }
@@ -40,7 +42,9 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <AppShell>
+                    <PageTransition>
                     <CreateTripPage />
+                  </PageTransition>
                   </AppShell>
                 </ProtectedRoute>
               }
@@ -50,7 +54,9 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <AppShell>
+                    <PageTransition>
                     <MyTripsPage />
+                  </PageTransition>
                   </AppShell>
                 </ProtectedRoute>
               }
@@ -60,7 +66,9 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <AppShell>
+                    <PageTransition>
                     <CitySearchPage />
+                  </PageTransition>
                   </AppShell>
                 </ProtectedRoute>
               }
@@ -70,7 +78,9 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <AppShell>
+                    <PageTransition>
                     <ItineraryViewPage />
+                  </PageTransition>
                   </AppShell>
                 </ProtectedRoute>
               }
@@ -80,7 +90,21 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <AppShell>
+                    <PageTransition>
                     <ItineraryBuilderPage />
+                  </PageTransition>
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trips/:id/calendar"
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <PageTransition>
+                    <CalendarPage />
+                  </PageTransition>
                   </AppShell>
                 </ProtectedRoute>
               }
@@ -90,7 +114,9 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <AppShell>
+                    <PageTransition>
                     <BudgetPage />
+                  </PageTransition>
                   </AppShell>
                 </ProtectedRoute>
               }
@@ -99,13 +125,26 @@ export default function App() {
               path="*"
               element={
                 <AppShell>
+                    <PageTransition>
                   <NotFoundPage />
-                </AppShell>
+                </PageTransition>
+                  </AppShell>
               }
             />
-          </Routes>
-        </AnimatePresence>
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
+function App() {
+  useLenis();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AnimatedRoutes />
       </BrowserRouter>
     </QueryClientProvider>
   );
 }
+
+export default App;
