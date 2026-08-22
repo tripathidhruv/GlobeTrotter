@@ -18,7 +18,9 @@ import { ItineraryBuilderPage } from "./features/itinerary/ItineraryBuilderPage"
 import { BudgetPage } from "./features/budget/BudgetPage";
 import { ItineraryViewPage } from "./features/itinerary/ItineraryViewPage";
 import { CalendarPage } from "./features/calendar/CalendarPage";
+import { AdminPage } from "./features/admin/AdminPage";
 import { PublicItineraryPage } from "./features/share/PublicItineraryPage";
+import { SettingsPage } from "./features/settings/SettingsPage";
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -131,6 +133,30 @@ function AnimatedRoutes() {
                   <AppShell>
                     <PageTransition>
                     <BudgetPage />
+                  </PageTransition>
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <PageTransition>
+                    <SettingsPage />
+                  </PageTransition>
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <PageTransition>
+                    <AdminPage />
                   </PageTransition>
                   </AppShell>
                 </ProtectedRoute>
