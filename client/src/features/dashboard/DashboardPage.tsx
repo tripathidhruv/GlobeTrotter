@@ -103,8 +103,8 @@ function CityCardContent({ city, onOpen }: { city: City; onOpen: () => void }) {
           <ZoomImage
             src={city.imageUrl}
             className="opacity-70 transition-opacity duration-500 group-hover:opacity-95"
-            from={1.3}
-            to={1.02}
+            from={1.02}
+            to={1.32}
             drift={4}
           />
         </div>

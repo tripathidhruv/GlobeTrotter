@@ -78,6 +78,8 @@ function Hero({ trip }: { trip: { name: string; startDate: string; endDate: stri
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
+  // Zoom in only, so the hero city closes in as the reader scrolls.
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.3]);
 
   const bg = trip.heroImage ? (
     <div
@@ -93,7 +95,10 @@ function Hero({ trip }: { trip: { name: string; startDate: string; endDate: stri
       {reduce ? (
         bg
       ) : (
-        <motion.div style={{ y }} className="absolute inset-0 h-[120%]">
+        <motion.div
+          style={{ y, scale }}
+          className="absolute inset-0 h-[120%] origin-center will-change-transform"
+        >
           {bg}
         </motion.div>
       )}
@@ -133,6 +138,10 @@ function CityBackground({ imageUrl }: { imageUrl: string | null | undefined }) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
+  // Zoom in only — the city closes in as the section passes, never retreats.
+  const scale = useTransform(scrollYProgress, [0, 1], [1.02, 1.34]);
+  // Let the photograph brighten as it fills the frame.
+  const scrim = useTransform(scrollYProgress, [0, 1], [0.85, 0.6]);
 
   const img = imageUrl ? (
     <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${imageUrl})` }} />
@@ -143,11 +152,18 @@ function CityBackground({ imageUrl }: { imageUrl: string | null | undefined }) {
   return (
     <div ref={ref} className="absolute inset-0 overflow-hidden">
       {reduce ? img : (
-        <motion.div style={{ y }} className="absolute inset-0 h-[116%]">
+        <motion.div
+          style={{ y, scale }}
+          className="absolute inset-0 h-[116%] origin-center will-change-transform"
+        >
           {img}
         </motion.div>
       )}
-      <div className="absolute inset-0 bg-ink/75" />
+      {reduce ? (
+        <div className="absolute inset-0 bg-ink/75" />
+      ) : (
+        <motion.div style={{ opacity: scrim }} className="absolute inset-0 bg-ink" />
+      )}
     </div>
   );
 }

@@ -23,11 +23,10 @@ export function SceneryBand({
     offset: ["start end", "end start"],
   });
 
-  // Drift the image opposite the scroll direction for depth, and push it
-  // through the frame: the buildings swell as the band enters view and pull
-  // back as it leaves, so scrolling reads as moving toward the city.
+  // Drift for depth, and zoom IN continuously across the whole pass — the
+  // buildings only ever close in, never retreat.
   const y = useTransform(scrollYProgress, [0, 1], ["-12%", "12%"]);
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1.35, 1.08, 1.35]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1.05, 1.4]);
   const scrimOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.85, 0.55, 0.85]);
 
   return (

@@ -15,7 +15,7 @@ export function ZoomImage({
 }: {
   src: string;
   className?: string;
-  /** Scale when the section's top meets the viewport bottom. */
+  /** Scale when the section's top meets the viewport bottom. Keep <= `to` so the image only ever zooms in. */
   from?: number;
   /** Scale once the section has scrolled fully past. */
   to?: number;

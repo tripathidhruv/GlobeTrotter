@@ -163,7 +163,7 @@ export function MyTripsPage() {
   return (
     <div>
       <section className="relative isolate overflow-hidden bg-ink text-platform">
-        {heroImage && <ZoomImage src={heroImage} className="opacity-45" from={1.25} to={1} />}
+        {heroImage && <ZoomImage src={heroImage} className="opacity-45" from={1} to={1.3} />}
         <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/80 to-ink/40" />
 
         <div className="relative mx-auto max-w-6xl px-6 py-20">
