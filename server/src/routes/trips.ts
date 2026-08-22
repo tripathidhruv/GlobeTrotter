@@ -1,9 +1,39 @@
+import { randomBytes } from "crypto";
 import { Router } from "express";
 import { z } from "zod";
 import db from "../db.js";
 import { verifySupabaseJwt, type AuthedRequest } from "../middleware/auth.js";
 
 const router = Router();
+
+function generateShareSlug(): string {
+  return randomBytes(9).toString("base64url");
+}
+
+// Public, unauthenticated route — must be registered before "/:id" so
+// Express does not parse "public" as an :id param.
+router.get("/public/:slug", async (req, res) => {
+  const trip = await db.trip.findUnique({
+    where: { shareSlug: String(req.params.slug) },
+    include: {
+      stops: {
+        include: { city: true, activities: { include: { activity: true } } },
+        orderBy: { orderIndex: "asc" },
+      },
+    },
+  });
+  if (!trip || !trip.isPublic) return res.status(404).json({ error: "not found" });
+
+  res.json({
+    id: trip.id,
+    name: trip.name,
+    description: trip.description,
+    coverPhotoUrl: trip.coverPhotoUrl,
+    startDate: trip.startDate,
+    endDate: trip.endDate,
+    stops: trip.stops,
+  });
+});
 
 const createTripSchema = z.object({
   name: z.string().min(1),
@@ -100,6 +130,28 @@ router.delete("/:id", verifySupabaseJwt, async (req: AuthedRequest, res) => {
   if (trip.ownerId !== req.userId) return res.status(403).json({ error: "forbidden" });
 
   await db.trip.delete({ where: { id: trip.id } });
+  res.status(204).end();
+});
+
+router.post("/:id/share", verifySupabaseJwt, async (req: AuthedRequest, res) => {
+  const trip = await db.trip.findUnique({ where: { id: String(req.params.id) } });
+  if (!trip) return res.status(404).json({ error: "not found" });
+  if (trip.ownerId !== req.userId) return res.status(403).json({ error: "forbidden" });
+
+  const shareSlug = trip.shareSlug ?? generateShareSlug();
+  const updated = await db.trip.update({
+    where: { id: trip.id },
+    data: { isPublic: true, shareSlug },
+  });
+  res.json({ shareSlug: updated.shareSlug });
+});
+
+router.delete("/:id/share", verifySupabaseJwt, async (req: AuthedRequest, res) => {
+  const trip = await db.trip.findUnique({ where: { id: String(req.params.id) } });
+  if (!trip) return res.status(404).json({ error: "not found" });
+  if (trip.ownerId !== req.userId) return res.status(403).json({ error: "forbidden" });
+
+  await db.trip.update({ where: { id: trip.id }, data: { isPublic: false } });
   res.status(204).end();
 });
 

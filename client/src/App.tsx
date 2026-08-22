@@ -17,6 +17,7 @@ import { ItineraryBuilderPage } from "./features/itinerary/ItineraryBuilderPage"
 import { BudgetPage } from "./features/budget/BudgetPage";
 import { ItineraryViewPage } from "./features/itinerary/ItineraryViewPage";
 import { CalendarPage } from "./features/calendar/CalendarPage";
+import { PublicItineraryPage } from "./features/share/PublicItineraryPage";
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -25,6 +26,7 @@ function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/share/:slug" element={<PublicItineraryPage />} />
             <Route
               path="/"
               element={
