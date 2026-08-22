@@ -9,7 +9,7 @@ const navLinks = [
 function navLinkClass({ isActive }: { isActive: boolean }) {
   return [
     "relative py-1 font-display text-xs uppercase tracking-board transition-colors",
-    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal",
+    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit",
     isActive ? "text-platform" : "text-platform/60 hover:text-platform",
     isActive
       ? "after:absolute after:-bottom-1 after:left-0 after:right-0 after:h-[2px] after:bg-signal"
@@ -37,11 +37,11 @@ function Clock() {
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-platform">
-      <header className="border-b border-ink bg-ink px-4 py-3 text-platform sm:px-6">
+      <header className="bg-ink px-4 py-3 text-platform sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
           <Link
             to="/"
-            className="font-display text-lg uppercase tracking-board text-platform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+            className="font-display text-lg uppercase tracking-board text-platform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit"
           >
             GlobeTrotter
           </Link>
