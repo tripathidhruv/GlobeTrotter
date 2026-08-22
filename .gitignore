@@ -10,3 +10,5 @@ dist/
 .windsurf/
 .cursor/
 skills-lock.json
+
+.worktrees/
