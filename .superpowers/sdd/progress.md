@@ -15,3 +15,11 @@ Task 8: complete (commit 1e757b0, review clean, no fix round — Tailwind v4 @co
     - Button.tsx uses {...(props as any)} — type-safety gap, inherited from plan's reference code
 Task 9: complete (commits b30f81d, 1a95ea5, review clean after 1 small fix — focus-ring token consistency)
   Minor deferred to final review: ProtectedRoute checks session once on mount, no onAuthStateChange subscription (per brief; revisit if stale-session bugs appear)
+Task 10: complete (commits 7001bc5, d317b46, d06bb00, review clean after 1 fix round)
+  MAJOR foundation fix landed here: Tailwind v4 was configured with v3-era @config + @tailwind directives,
+  which silently dropped Tailwind's ENTIRE default theme (spacing, font sizes, named scales, breakpoints).
+  Every screen from Tasks 8-10 had been rendering with no padding/margin/gap/font-size in production builds.
+  Fixed by migrating to v4-native `@import "tailwindcss"` + `@theme` block; tailwind.config.ts deleted.
+  Verified by grepping compiled CSS (controller verified independently, not just via report).
+  Also fixed: aria-hidden wrapper around a focusable <Link> in AuthLayout (WCAG aria-hidden-focus).
+  Also done: extracted shared AuthField/AuthError from Login/SignupPage.

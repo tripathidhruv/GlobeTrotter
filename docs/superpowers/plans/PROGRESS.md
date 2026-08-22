@@ -5,8 +5,8 @@ Spec: `docs/superpowers/specs/2026-08-22-globetrotter-design.md`
 
 Update this file's checkbox + "Last completed" line after EVERY task finishes (commit lands). If switching Claude accounts/sessions mid-build: open this file first, tell the new session "resume GlobeTrotter build, see docs/superpowers/plans/PROGRESS.md", it picks up at "Next task".
 
-**Last completed:** Task 9 — App shell: router, protected routes, page transitions (commits b30f81d, 1a95ea5)
-**Next task:** Task 10 — Auth screens (Login/Signup)
+**Last completed:** Task 10 — Auth screens (Login/Signup) (commits 7001bc5, d317b46, d06bb00)
+**Next task:** Task 11 — API client + trips query hooks
 
 ## Tasks
 
@@ -19,7 +19,7 @@ Update this file's checkbox + "Last completed" line after EVERY task finishes (c
 - [x] 7. StopActivity attach/detach + budget service + budget endpoint
 - [x] 8. Design tokens, fonts, Lenis, base UI primitives
 - [x] 9. App shell — router, protected routes, page transitions
-- [ ] 10. Auth screens (Login/Signup)
+- [x] 10. Auth screens (Login/Signup)
 - [ ] 11. API client + trips query hooks
 - [ ] 12. Dashboard screen
 - [ ] 13. Create Trip + My Trips screens
@@ -79,5 +79,8 @@ Signature element: **`RouteLine`** (`client/src/components/ui/RouteLine.tsx`) �
 
 **Tasks 9-24 in the plan still contain the OLD cream/terracotta class names in their literal JSX** — the plan's Global Constraints section has a mapping table (`bg-cream`→`bg-platform`, `text-ink/60`→`text-mute`, `border-ink/10`→`border-rail`, `bg-terracotta`→`bg-signal`, `rounded-lg/xl`+`shadow-sm`→`rounded-sm`+`border border-rail`, serif→`font-display uppercase tracking-board`, and Recharts palette → `["#FFB000","#1B4DFF","#0E1116","#6B747C","#2A3138"]`). Apply it every task; no old class name should survive.
 
-- **Tailwind is v4.3.3, not v3** (the plan's Task 8 config assumed v3). Bridged via `@tailwindcss/postcss` + a `@config "../../tailwind.config.ts";` line in `globals.css`. Client code does NOT use `.js` import extensions (that's server-only).
+- **Tailwind is v4.3.3 and is now configured v4-natively** — `client/src/styles/globals.css` uses `@import "tailwindcss";` plus a `@theme { --color-ink: …; --font-display: …; --tracking-board: …; --radius-sm: … }` block. **There is no `tailwind.config.ts` any more — it was deleted.** Add new design tokens to the `@theme` block in `globals.css`, never to a JS config.
+  - Why this matters: the original v3-style setup (`@config` + `@tailwind base/components/utilities`) silently dropped Tailwind's *entire default theme*. `px-4`, `text-sm`, `max-w-sm`, `sm:`/`md:` — none of them emitted any CSS. Tasks 8-10 were all rendering with zero padding/margins/gaps/font-sizes in production before this was caught in Task 10's review.
+  - **Verification method to reuse:** don't trust "it looked right in the dev server." Run `npx vite build` in `client/`, then grep `client/dist/assets/*.css` for the utility classes you expect. If a class produces no rule, it silently doesn't exist.
+- Client code does NOT use `.js` import extensions (that's server-only).
 - `client/` now has a real test runner: `test` script + `vitest.config.ts` + `vitest.setup.ts` (with IntersectionObserver/ResizeObserver stubs, needed because jsdom lacks them and framer-motion's `whileInView`/`useScroll` require them).
