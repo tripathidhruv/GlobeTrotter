@@ -1,17 +1,22 @@
 @import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap");
-@config "../../tailwind.config.ts";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --ink: #0e1116;
-  --board: #2a3138;
-  --platform: #eff1f3;
-  --rail: #d3d8dd;
-  --mute: #6b747c;
-  --signal: #ffb000;
-  --transit: #1b4dff;
+@theme {
+  --color-ink: #0e1116;
+  --color-board: #2a3138;
+  --color-platform: #eff1f3;
+  --color-rail: #d3d8dd;
+  --color-mute: #6b747c;
+  --color-signal: #ffb000;
+  --color-transit: #1b4dff;
+
+  --font-display: "Barlow Condensed", sans-serif;
+  --font-sans: Inter, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --tracking-board: 0.08em;
+
+  --radius-sm: 2px;
 }
 
 body {

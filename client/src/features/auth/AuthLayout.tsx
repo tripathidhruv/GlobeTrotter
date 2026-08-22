@@ -23,23 +23,20 @@ export function AuthLayout({
 
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-5">
-      <div
-        aria-hidden
-        className="order-2 hidden flex-col justify-between bg-ink px-10 py-12 text-platform md:order-1 md:col-span-2 md:flex"
-      >
+      <div className="order-2 hidden flex-col justify-between bg-ink px-10 py-12 text-platform md:order-1 md:col-span-2 md:flex">
         <Link
           to="/"
           className="font-display text-lg uppercase tracking-board text-platform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit"
         >
           GlobeTrotter
         </Link>
-        <div>
+        <div aria-hidden>
           <p className="mb-6 font-mono text-xs uppercase tracking-board text-platform/60">
             Sample itinerary
           </p>
           <RouteLine stops={sampleRoute} compact />
         </div>
-        <p className="font-mono text-xs text-platform/40">
+        <p aria-hidden className="font-mono text-xs text-platform/40">
           Plan multi-city trips down to the departure board.
         </p>
       </div>
