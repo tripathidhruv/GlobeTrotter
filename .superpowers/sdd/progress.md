@@ -6,3 +6,4 @@ Task 2: complete (commit ba3c807, review clean, Minor findings logged for whole-
 Task 3: complete (commit 6a7c872, review clean)
 Task 4: complete (commits 2a3390d..57e7b77, review clean after 1 fix round — server ESM/build breakage fixed, affects whole server workspace not just Task 4 files)
 Task 5: complete (commits d6d4406..54ae089, review clean after 1 fix round — added ownership/collaborator authorization to trip+stop mutation routes, a plan-mandated gap user chose to fix immediately)
+Task 6: complete (commits 214f6ed..853e261, review clean after 1 fix round — cost_max NaN validation)

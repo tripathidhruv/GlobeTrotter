@@ -5,8 +5,8 @@ Spec: `docs/superpowers/specs/2026-08-22-globetrotter-design.md`
 
 Update this file's checkbox + "Last completed" line after EVERY task finishes (commit lands). If switching Claude accounts/sessions mid-build: open this file first, tell the new session "resume GlobeTrotter build, see docs/superpowers/plans/PROGRESS.md", it picks up at "Next task".
 
-**Last completed:** Task 5 — Trip detail/update/delete + Stop CRUD endpoints (commits a8e62c9, 54ae089)
-**Next task:** Task 6 — Cities + Activities search endpoints
+**Last completed:** Task 6 — Cities + Activities search endpoints (commits 86efc3a, 853e261)
+**Next task:** Task 7 — StopActivity attach/detach + budget service + budget endpoint
 
 ## Tasks
 
@@ -15,7 +15,7 @@ Update this file's checkbox + "Last completed" line after EVERY task finishes (c
 - [x] 3. Express app skeleton + Vercel serverless entry
 - [x] 4. Auth middleware + trips list/create endpoints
 - [x] 5. Trip detail/update/delete + Stop CRUD endpoints
-- [ ] 6. Cities + Activities search endpoints
+- [x] 6. Cities + Activities search endpoints
 - [ ] 7. StopActivity attach/detach + budget service + budget endpoint
 - [ ] 8. Design tokens, fonts, Lenis, base UI primitives
 - [ ] 9. App shell — router, protected routes, page transitions
