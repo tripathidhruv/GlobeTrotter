@@ -4,6 +4,7 @@ import { Reorder, motion, useReducedMotion } from "framer-motion";
 import { useTrip, useReorderStop, useDeleteStop, type TripStop } from "./useTrip";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { Button } from "../../components/ui/Button";
+import { AiSuggestPanel } from "../ai/AiSuggestPanel";
 
 function formatDate(iso: string) {
   return iso.slice(0, 10);
@@ -171,6 +172,7 @@ export function ItineraryBuilderPage() {
   const [stops, setStops] = useState<TripStop[]>([]);
   const [pendingDelete, setPendingDelete] = useState<TripStop | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
 
   const stopsSignature = trip?.stops
     ? trip.stops.map((s) => `${s.id}:${s.orderIndex}`).join(",")
@@ -225,6 +227,11 @@ export function ItineraryBuilderPage() {
               <p className="mt-2 font-mono text-sm text-rail">
                 {formatDate(trip.startDate)} — {formatDate(trip.endDate)}
               </p>
+              <div className="mt-4">
+                <Button type="button" variant="secondary" onClick={() => setAiPanelOpen(true)}>
+                  AI suggest
+                </Button>
+              </div>
             </>
           )}
         </div>
@@ -306,6 +313,13 @@ export function ItineraryBuilderPage() {
         isConfirming={isDeleting}
         onConfirm={confirmDelete}
         onCancel={() => setPendingDelete(null)}
+      />
+
+      <AiSuggestPanel
+        open={aiPanelOpen}
+        tripId={tripId}
+        trip={trip}
+        onClose={() => setAiPanelOpen(false)}
       />
     </div>
   );
