@@ -5,8 +5,8 @@ Spec: `docs/superpowers/specs/2026-08-22-globetrotter-design.md`
 
 Update this file's checkbox + "Last completed" line after EVERY task finishes (commit lands). If switching Claude accounts/sessions mid-build: open this file first, tell the new session "resume GlobeTrotter build, see docs/superpowers/plans/PROGRESS.md", it picks up at "Next task".
 
-**Last completed:** Task 12 — Dashboard screen (commits 9d01b43, 1c29ed4, e384799)
-**Next task:** Task 13 — Create Trip + My Trips screens
+**Last completed:** Task 13 — Create Trip + My Trips screens (commits 441e041, 3c01043)
+**Next task:** Task 14 — City Search screen + real catalog import
 
 ## Tasks
 
@@ -22,7 +22,7 @@ Update this file's checkbox + "Last completed" line after EVERY task finishes (c
 - [x] 10. Auth screens (Login/Signup)
 - [x] 11. API client + trips query hooks
 - [x] 12. Dashboard screen
-- [ ] 13. Create Trip + My Trips screens
+- [x] 13. Create Trip + My Trips screens
 - [ ] 14. City Search screen
 - [ ] 15. Itinerary Builder screen (drag-reorder)
 - [ ] 16. Activity Search + attach-to-stop
@@ -105,3 +105,16 @@ The live database holds only **1 city (Lisbon) and 3 activities**. `server/prism
 ## Visual direction: keep transit, add weight (user decision)
 
 The transit-systems direction stays. The design system was verified rendering correctly (platform `#EFF1F3` base, ink `#0E1116` text, rail `#D3D8DD`, signal `#FFB000`, all three fonts loading). But screens from Task 13 onward must carry more visual weight, inside the existing token set: a full-bleed `bg-ink` band as a hero/section device on each screen, stronger `signal` accent presence, real imagery wherever the schema supports it, and richer motion (staggered reveals, route-line draw, hover states) — always guarded by `useReducedMotion`.
+
+## Task 13 notes
+
+- **Scope stops at Task 20** (user instruction). Tasks 21-25 — Profile/Settings, Realtime collaboration, AI trip suggestions, Admin/Analytics, Vercel deployment — are out of scope for this run.
+- **Commit attribution changed mid-build.** Commits through `441e041` are authored `sanchitaaX`; from `3c01043` onward they are authored `swamini1662 <swamini1662@users.noreply.github.com>`. Pushed history was not rewritten.
+- `client/src/components/ui/ConfirmDialog.tsx` is the shared destructive-action dialog: `role="dialog"`, `aria-modal`, `aria-labelledby`, focus-on-open, Tab/Shift-Tab focus trap with boundary wrap, Escape-to-cancel, focus restored to the trigger on cancel/confirm/unmount, plus `aria-busy` + pending label. **Use this for every future destructive confirmation** (deleting stops, activities, accounts) rather than hand-rolling a modal.
+- **Reduced-motion is now enforced at the primitive level.** `Card.tsx` and `Button.tsx` previously ran unconditional `whileHover` motion regardless of the user's preference, which silently defeated the branch-on-reduce guards in the page components. Both now branch on `useReducedMotion()` and return plain elements. Any new primitive with motion must do the same — gating props on an always-present `motion.*` is NOT sufficient.
+- `GET /api/trips` now returns `_count.stops` for the destination count on trip cards. Additive; existing consumers unaffected.
+- Cover photos are stored as a validated `http(s)` URL through the existing `POST /api/trips` (no binary upload infrastructure). `TripCoverImage` hides the frame entirely via `onError` rather than rendering a broken image.
+
+## Deviation from plan: Task 13 scope widened
+
+The plan's brief had View/Edit links only and no validation. Added per spec section 6 row 4 and the hackathon problem statement (screens 3 and 4): a delete action behind a confirmation dialog, destination count, cover photo, and form validation. Same pattern as Task 12 — where the plan's brief is thinner than the spec, the spec wins.
