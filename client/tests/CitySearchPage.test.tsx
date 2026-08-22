@@ -149,7 +149,51 @@ describe("CitySearchPage", () => {
     expect(screen.getByText(/couldn't load cities/i)).toBeInTheDocument();
   });
 
-  it("adds a city to the trip with the next order index and the chosen dates, defaulting to the trip's date range", async () => {
+  it("adds a city to the trip with the next order index and the chosen dates, chaining the arrival off the last stop's departure", async () => {
+    vi.mocked(useCities).mockReturnValue({
+      data: [
+        { id: "c1", name: "Lisbon", country: "Portugal", region: "Europe", costIndex: 55, popularityScore: 88, imageUrl: null },
+      ],
+      isLoading: false,
+      isError: false,
+    } as any);
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: /add to trip/i }));
+
+    // Last existing stop departs 2026-09-02, so the next city defaults to
+    // arriving the day after, with a departure a few days later, clamped to
+    // the trip's end date.
+    const arrival = await screen.findByLabelText(/arrival date/i);
+    const departure = screen.getByLabelText(/departure date/i);
+    expect(arrival).toHaveValue("2026-09-03");
+    expect(departure).toHaveValue("2026-09-06");
+
+    fireEvent.click(screen.getByRole("button", { name: /confirm/i }));
+
+    await waitFor(() => {
+      expect(mutateAsync).toHaveBeenCalledWith({
+        cityId: "c1",
+        orderIndex: 1,
+        arrivalDate: "2026-09-03",
+        departureDate: "2026-09-06",
+      });
+    });
+  });
+
+  it("defaults the first city's arrival to the trip's start date when there are no stops yet", async () => {
+    vi.mocked(useTrip).mockReturnValue({
+      data: {
+        id: "t1",
+        name: "Iceland Loop",
+        startDate: "2026-09-01T00:00:00.000Z",
+        endDate: "2026-09-10T00:00:00.000Z",
+        ownerId: "u1",
+        stops: [],
+      },
+      isLoading: false,
+      isError: false,
+    } as any);
     vi.mocked(useCities).mockReturnValue({
       data: [
         { id: "c1", name: "Lisbon", country: "Portugal", region: "Europe", costIndex: 55, popularityScore: 88, imageUrl: null },
@@ -164,17 +208,23 @@ describe("CitySearchPage", () => {
     const arrival = await screen.findByLabelText(/arrival date/i);
     const departure = screen.getByLabelText(/departure date/i);
     expect(arrival).toHaveValue("2026-09-01");
-    expect(departure).toHaveValue("2026-09-10");
+    expect(departure).toHaveValue("2026-09-04");
+  });
 
-    fireEvent.click(screen.getByRole("button", { name: /confirm/i }));
+  it("shows the current stop count and forward navigation to activities and the itinerary", async () => {
+    vi.mocked(useCities).mockReturnValue({ data: [], isLoading: false, isError: false } as any);
+    renderPage();
 
-    await waitFor(() => {
-      expect(mutateAsync).toHaveBeenCalledWith({
-        cityId: "c1",
-        orderIndex: 1,
-        arrivalDate: "2026-09-01",
-        departureDate: "2026-09-10",
-      });
-    });
+    expect(
+      await screen.findByText(
+        (_, node) =>
+          node?.tagName.toLowerCase() === "p" && /1\s*stop added/i.test(node.textContent ?? "")
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /next: add activities/i })).toHaveAttribute(
+      "href",
+      "/trips/t1/activities"
+    );
+    expect(screen.getByRole("link", { name: /done/i })).toHaveAttribute("href", "/trips/t1");
   });
 });

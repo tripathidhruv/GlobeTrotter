@@ -12,6 +12,7 @@ import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { CreateTripPage } from "./features/trips/CreateTripPage";
 import { MyTripsPage } from "./features/trips/MyTripsPage";
 import { CitySearchPage } from "./features/cities/CitySearchPage";
+import { ActivitySearchPage } from "./features/activities/ActivitySearchPage";
 import { NotFoundPage } from "./features/shared/NotFoundPage";
 import { ItineraryBuilderPage } from "./features/itinerary/ItineraryBuilderPage";
 import { BudgetPage } from "./features/budget/BudgetPage";
@@ -70,6 +71,18 @@ function AnimatedRoutes() {
                   <AppShell>
                     <PageTransition>
                     <CitySearchPage />
+                  </PageTransition>
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trips/:id/activities"
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <PageTransition>
+                    <ActivitySearchPage />
                   </PageTransition>
                   </AppShell>
                 </ProtectedRoute>

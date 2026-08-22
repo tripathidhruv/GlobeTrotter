@@ -45,6 +45,7 @@ function TripNav() {
     { to: `/trips/${id}`, label: "Itinerary" },
     { to: `/trips/${id}/build`, label: "Build" },
     { to: `/trips/${id}/cities`, label: "Cities" },
+    { to: `/trips/${id}/activities`, label: "Activities" },
     { to: `/trips/${id}/budget`, label: "Budget" },
     { to: `/trips/${id}/calendar`, label: "Calendar" },
   ];

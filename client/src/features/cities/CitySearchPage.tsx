@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { useCities, useCreateStop, type City } from "./useCities";
 import { useTrip } from "../trips/useTrips";
@@ -23,6 +23,17 @@ const inputClass =
 
 function formatDate(iso: string) {
   return iso.slice(0, 10);
+}
+
+/** Adds `days` calendar days to an ISO/date-only string, returning a date-only string. */
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(`${formatDate(dateStr)}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function clampDate(dateStr: string, maxStr: string): string {
+  return dateStr > maxStr ? maxStr : dateStr;
 }
 
 function CityImage({ city }: { city: City }) {
@@ -234,8 +245,25 @@ export function CitySearchPage() {
   const { data: trip } = useTrip(tripId);
   const reduce = useReducedMotion() ?? false;
 
-  const defaultArrival = trip ? formatDate(trip.startDate) : "";
-  const defaultDeparture = trip ? formatDate(trip.endDate) : "";
+  const stopCount = trip?.stops.length ?? 0;
+
+  // Chain dates: the next city's arrival defaults to the day after the last
+  // stop's departure, so multi-city trips don't all collapse onto day one.
+  const defaultArrival = useMemo(() => {
+    if (!trip) return "";
+    if (trip.stops.length > 0) {
+      const lastStop = trip.stops[trip.stops.length - 1];
+      return addDays(lastStop.departureDate, 1);
+    }
+    return formatDate(trip.startDate);
+  }, [trip]);
+
+  const defaultDeparture = useMemo(() => {
+    if (!trip || !defaultArrival) return "";
+    const tripEnd = formatDate(trip.endDate);
+    return clampDate(addDays(defaultArrival, 3), tripEnd);
+  }, [trip, defaultArrival]);
+
   const nextOrderIndex = useMemo(() => trip?.stops.length ?? 0, [trip]);
 
   return (
@@ -250,6 +278,31 @@ export function CitySearchPage() {
                 {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
               </span>
             </p>
+          )}
+          {trip && (
+            <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-platform/15 pt-5">
+              <p className="font-mono text-xs uppercase tracking-board text-platform/60">
+                <span className="text-platform">{stopCount}</span>{" "}
+                {stopCount === 1 ? "stop" : "stops"} added
+              </p>
+              <div className="flex flex-1 flex-wrap justify-end gap-3">
+                <Link
+                  to={`/trips/${tripId}`}
+                  className="rounded-sm border border-platform/40 px-5 py-2.5 font-display text-sm font-semibold uppercase tracking-board text-platform transition-colors hover:border-platform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit"
+                >
+                  Done
+                </Link>
+                {stopCount === 0 ? (
+                  <Button disabled title="Add a city first">
+                    Next: add activities
+                  </Button>
+                ) : (
+                  <Link to={`/trips/${tripId}/activities`}>
+                    <Button>Next: add activities</Button>
+                  </Link>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>
