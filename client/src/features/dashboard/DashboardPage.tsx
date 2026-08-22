@@ -1,10 +1,14 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useTrips, type Trip } from "../trips/useTrips";
 import { useCities, type City } from "../cities/useCities";
 import { useTripBudget } from "../budget/useTripBudget";
 import { Button } from "../../components/ui/Button";
 import { VideoBackdrop } from "../../components/ui/VideoBackdrop";
+import { Ticker } from "../../components/ui/Ticker";
+import { SceneryBand } from "../../components/ui/SceneryBand";
+import { CityDialog } from "../../components/ui/CityDialog";
 
 const HERO_CLIPS = [
   { src: "/video/paris.mp4", label: "Paris" },
@@ -85,9 +89,12 @@ function TripRow({ trip, index, reduce }: { trip: Trip; index: number; reduce: b
 
 /* -------------------------------------------------------------------------- */
 
-function CityCardContent({ city }: { city: City }) {
+function CityCardContent({ city, onOpen }: { city: City; onOpen: () => void }) {
   return (
-    <article className="group relative overflow-hidden rounded-sm border border-rail bg-ink">
+    <article
+      onClick={onOpen}
+      className="group relative cursor-pointer overflow-hidden rounded-sm border border-rail bg-ink"
+    >
       {city.imageUrl ? (
         <img
           src={city.imageUrl}
@@ -104,6 +111,9 @@ function CityCardContent({ city }: { city: City }) {
       <div className="absolute inset-x-0 bottom-0 p-4">
         <h3 className="font-display text-xl uppercase tracking-board text-platform">{city.name}</h3>
         <p className="font-mono text-[11px] uppercase text-platform/70">{city.country}</p>
+        <span className="pointer-events-none absolute right-4 top-4 rounded-sm border border-platform/40 bg-ink/60 px-2 py-1 font-mono text-[10px] uppercase text-platform opacity-0 transition-opacity group-hover:opacity-100">
+          View
+        </span>
         <div className="mt-2 flex items-center gap-3 font-mono text-[11px] text-platform/60">
           <span>
             COST <span className="text-signal">{city.costIndex}</span>
@@ -118,8 +128,18 @@ function CityCardContent({ city }: { city: City }) {
   );
 }
 
-function CityCard({ city, index, reduce }: { city: City; index: number; reduce: boolean }) {
-  if (reduce) return <CityCardContent city={city} />;
+function CityCard({
+  city,
+  index,
+  reduce,
+  onOpen,
+}: {
+  city: City;
+  index: number;
+  reduce: boolean;
+  onOpen: () => void;
+}) {
+  if (reduce) return <CityCardContent city={city} onOpen={onOpen} />;
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -127,7 +147,7 @@ function CityCard({ city, index, reduce }: { city: City; index: number; reduce: 
       viewport={{ once: true, margin: "-10% 0px" }}
       transition={{ delay: index * 0.05, duration: 0.45 }}
     >
-      <CityCardContent city={city} />
+      <CityCardContent city={city} onOpen={onOpen} />
     </motion.div>
   );
 }
@@ -136,6 +156,15 @@ function CityCard({ city, index, reduce }: { city: City; index: number; reduce: 
 
 export function DashboardPage() {
   const reduce = useReducedMotion() ?? false;
+  const [openCity, setOpenCity] = useState<City | null>(null);
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: heroProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  // Hero content drifts up and dissolves as the page scrolls past it.
+  const heroY = useTransform(heroProgress, [0, 1], ["0%", "28%"]);
+  const heroFade = useTransform(heroProgress, [0, 0.75], [1, 0]);
   const { data: trips, isLoading: tripsLoading, isError: tripsError } = useTrips();
   const { data: cities, isLoading: citiesLoading, isError: citiesError } = useCities();
 
@@ -148,10 +177,16 @@ export function DashboardPage() {
   return (
     <div className="-mx-4 sm:-mx-6">
       {/* ---------------------------------------------------------------- Hero */}
-      <section className="relative isolate overflow-hidden bg-ink text-platform">
+      <section
+        ref={heroRef}
+        className="relative isolate flex min-h-[88vh] items-center overflow-hidden bg-ink text-platform"
+      >
         <VideoBackdrop sources={HERO_CLIPS} className="absolute inset-0" />
 
-        <div className="relative mx-auto max-w-6xl px-6 py-20 sm:py-28">
+        <motion.div
+          style={reduce ? undefined : { y: heroY, opacity: heroFade }}
+          className="relative mx-auto w-full max-w-6xl px-6 py-20 sm:py-28"
+        >
           <p className="font-mono text-xs uppercase tracking-board text-signal">
             Departures · Live board
           </p>
@@ -195,8 +230,22 @@ export function DashboardPage() {
               All trips
             </Link>
           </div>
-        </div>
+        </motion.div>
+
+        {!reduce && (
+          <motion.span
+            aria-hidden
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 0], y: [0, 10, 0] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-x-0 bottom-8 mx-auto w-max font-mono text-[11px] uppercase tracking-board text-platform/60"
+          >
+            Scroll
+          </motion.span>
+        )}
       </section>
+
+      <Ticker items={(cities ?? []).slice(0, 16).map((c) => c.name)} />
 
       {/* ------------------------------------------------------------ Your trips */}
       <section className="mx-auto max-w-6xl px-6 py-16">
@@ -232,6 +281,13 @@ export function DashboardPage() {
         </div>
       </section>
 
+      <SceneryBand
+        imageUrl={cities?.[0]?.imageUrl}
+        eyebrow="Now boarding"
+        title={cities?.[0] ? `${cities[0].name} is running today` : "Somewhere is always boarding"}
+        caption="Pick a destination, set the dates, and the board fills itself in."
+      />
+
       {/* ------------------------------------------------------- Recommended */}
       <section className="bg-ink py-16 text-platform">
         <div className="mx-auto max-w-6xl px-6">
@@ -253,11 +309,24 @@ export function DashboardPage() {
 
           <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {cities?.slice(0, 8).map((city, i) => (
-              <CityCard key={city.id} city={city} index={i} reduce={reduce} />
+              <CityCard
+                key={city.id}
+                city={city}
+                index={i}
+                reduce={reduce}
+                onOpen={() => setOpenCity(city)}
+              />
             ))}
           </div>
         </div>
       </section>
+
+      <SceneryBand
+        imageUrl={cities?.[3]?.imageUrl}
+        eyebrow="Cost control"
+        title="Know the price before you go"
+        caption="Every stop, activity and night adds up on one board — no surprises at the gate."
+      />
 
       {/* ------------------------------------------------------------- Budget */}
       <section className="mx-auto max-w-6xl px-6 py-16">
@@ -303,6 +372,8 @@ export function DashboardPage() {
           </div>
         )}
       </section>
+
+      <CityDialog city={openCity} onClose={() => setOpenCity(null)} />
     </div>
   );
 }

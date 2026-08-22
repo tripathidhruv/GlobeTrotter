@@ -59,7 +59,8 @@ describe("DashboardPage", () => {
 
   it("renders recommended cities from useCities", () => {
     renderDashboard();
-    expect(screen.getByText("Lisbon")).toBeInTheDocument();
+    // The city name also appears in the ticker and scenery band, so match all.
+    expect(screen.getAllByText("Lisbon").length).toBeGreaterThan(0);
   });
 
   it("renders the budget highlight total cost in font-mono", () => {
