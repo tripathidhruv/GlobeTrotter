@@ -3,10 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Button } from "../../components/ui/Button";
 import { AuthLayout } from "./AuthLayout";
-
-const inputClass =
-  "w-full rounded-sm border border-rail bg-white px-3 py-2 text-sm text-ink focus:border-ink focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit";
-const labelClass = "mb-1 block font-display text-xs uppercase tracking-board text-ink";
+import { AuthField, AuthError } from "./AuthField";
 
 export function LoginPage() {
   const [email, setEmail] = useState("");
@@ -28,42 +25,25 @@ export function LoginPage() {
   return (
     <AuthLayout heading="Log in" subheading="Pick up your trip where you left it.">
       <form onSubmit={handleSubmit} noValidate>
-        <div className="mb-4">
-          <label htmlFor="email" className={labelClass}>
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={inputClass}
-          />
-        </div>
-        <div className="mb-4">
-          <label htmlFor="password" className={labelClass}>
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={inputClass}
-          />
-        </div>
-        {error && (
-          <div
-            role="alert"
-            className="mb-4 border-l-2 border-signal bg-white px-3 py-2 text-sm text-ink"
-          >
-            {error}
-          </div>
-        )}
+        <AuthField
+          id="email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <AuthField
+          id="password"
+          label="Password"
+          type="password"
+          autoComplete="current-password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {error && <AuthError message={error} />}
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? "Logging in…" : "Log in"}
         </Button>
