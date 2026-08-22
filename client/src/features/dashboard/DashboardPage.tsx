@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useTrips, type Trip } from "../trips/useTrips";
 import { useCities } from "../cities/useCities";
@@ -25,10 +25,15 @@ function findNearestUpcomingTrip(trips: Trip[] | undefined): Trip | undefined {
 }
 
 export function DashboardPage() {
-  const { data: trips, isLoading: tripsLoading } = useTrips();
-  const { data: cities, isLoading: citiesLoading } = useCities();
+  const { data: trips, isLoading: tripsLoading, isError: tripsError } = useTrips();
+  const { data: cities, isLoading: citiesLoading, isError: citiesError } = useCities();
   const nearestTrip = findNearestUpcomingTrip(trips);
-  const { data: budget, isLoading: budgetLoading } = useTripBudget(nearestTrip?.id);
+  const {
+    data: budget,
+    isLoading: budgetLoading,
+    isError: budgetError,
+  } = useTripBudget(nearestTrip?.id);
+  const reduce = useReducedMotion();
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -40,7 +45,12 @@ export function DashboardPage() {
       </div>
 
       {tripsLoading && <p className="text-mute">Loading...</p>}
-      {!tripsLoading && (!trips || trips.length === 0) && (
+      {tripsError && (
+        <p className="mb-4 text-mute">
+          Couldn't load your trips right now. Please try again shortly.
+        </p>
+      )}
+      {!tripsLoading && !tripsError && (!trips || trips.length === 0) && (
         <p className="mb-4 text-mute">No trips yet. Plan your first one to see it here.</p>
       )}
 
@@ -48,17 +58,14 @@ export function DashboardPage() {
         {trips?.map((trip, i) => (
           <motion.div
             key={trip.id}
-            initial={{ opacity: 0, y: 16 }}
+            initial={reduce ? false : { opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: i * 0.05 }}
+            transition={{ delay: reduce ? 0 : i * 0.05 }}
           >
             <Link to={`/trips/${trip.id}`}>
               <Card className="p-5">
                 <h2 className="font-display text-lg uppercase tracking-board">{trip.name}</h2>
-                <p className="font-mono text-sm text-mute">
-                  {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
-                </p>
                 <div className="mt-3">
                   <RouteLine
                     compact
@@ -77,7 +84,10 @@ export function DashboardPage() {
       <section className="mb-12">
         <h2 className="mb-4 font-display text-xl uppercase tracking-board">Recommended cities</h2>
         {citiesLoading && <p className="text-mute">Loading...</p>}
-        {!citiesLoading && (!cities || cities.length === 0) && (
+        {citiesError && (
+          <p className="text-mute">Couldn't load recommended cities right now. Please try again shortly.</p>
+        )}
+        {!citiesLoading && !citiesError && (!cities || cities.length === 0) && (
           <p className="text-mute">No cities available yet.</p>
         )}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
@@ -85,7 +95,7 @@ export function DashboardPage() {
             <Card key={city.id} className="p-4">
               <h3 className="font-display text-base uppercase tracking-board">{city.name}</h3>
               <p className="text-sm text-mute">{city.country}</p>
-              <p className="font-mono text-xs text-mute">Cost index {city.costIndex}</p>
+              <p className="font-mono text-xs text-mute">Relative cost index: {city.costIndex}</p>
             </Card>
           ))}
         </div>
@@ -97,7 +107,10 @@ export function DashboardPage() {
           <p className="text-mute">Plan a trip to see your budget breakdown here.</p>
         )}
         {nearestTrip && budgetLoading && <p className="text-mute">Loading...</p>}
-        {nearestTrip && !budgetLoading && budget && (
+        {nearestTrip && budgetError && (
+          <p className="text-mute">Couldn't load the budget for this trip right now. Please try again shortly.</p>
+        )}
+        {nearestTrip && !budgetLoading && !budgetError && budget && (
           <Card className="p-5">
             <p className="text-sm text-mute">Estimated total cost — {nearestTrip.name}</p>
             <p className="font-mono text-2xl">
@@ -105,7 +118,7 @@ export function DashboardPage() {
             </p>
           </Card>
         )}
-        {nearestTrip && !budgetLoading && !budget && (
+        {nearestTrip && !budgetLoading && !budgetError && !budget && (
           <p className="text-mute">Budget details aren't available for this trip yet.</p>
         )}
       </section>
