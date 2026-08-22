@@ -11,9 +11,29 @@
 ## Global Constraints
 
 - No animation/scroll library beyond Lenis, Framer Motion, Animate UI. No GSAP/AOS/react-scroll.
-- Fonts: Fraunces (display/serif) + Inter (body/sans) — not Playfair/DM Sans.
-- Colors: cream base `#FBF7F0`, ink text `#1F1B16`, terracotta primary `#C1543A`, forest-green secondary `#2F4A3C`. Light mode only.
-- Scroll-reveal motion only on Dashboard and Itinerary View — never on forms, tables, or the Budget screen.
+- **Visual direction: transit-systems** (departure boards, metro maps, rail timetables). See spec section 7 for full rationale. Do NOT use a cream/serif/terracotta editorial treatment — that direction was explicitly rejected as an AI-default look.
+- Fonts: **Barlow Condensed** (display, uppercase, tight tracking) + **Inter** (body/UI) + **JetBrains Mono** (all times, costs, dates, durations, stop numbers). Not Fraunces, not Playfair, not DM Sans, not Bebas Neue.
+- Colors — exact values: `ink #0E1116`, `board #2A3138`, `platform #EFF1F3`, `rail #D3D8DD`, `mute #6B747C`, `signal #FFB000` (primary accent), `transit #1B4DFF` (secondary). Light-first, with dark `ink` bands as a deliberate contrast device for heroes and day headers. No dark-mode toggle. Token names avoid `slate`/`amber` so Tailwind's built-in scales aren't shadowed.
+- Dense data (Budget, Calendar, Activity lists) uses hairline-ruled timetable **rows**, not cards. Cards only where a trip is an object to pick (Dashboard, My Trips).
+- Signature element is the shared `RouteLine` primitive (SVG line + stop nodes, drawn on scroll via `stroke-dashoffset`, nodes igniting amber on viewport entry). Reused across Dashboard, Itinerary Builder, Itinerary View, and Calendar — never reinvented per screen.
+- Scroll-driven motion only on the route line and Dashboard/Itinerary View section reveals — never on forms, tables, or the Budget screen.
+- `prefers-reduced-motion` respected everywhere: route line renders fully drawn, reveals resolve to end state.
+- Numbered stop markers (`01`/`02`/`03`) are correct here — a multi-city itinerary is a genuine ordered sequence.
+- **Tasks 9-24 were written before the transit direction was chosen, so their literal JSX still carries the old cream/terracotta classes.** Translate every occurrence using this mapping; the old class names must not survive anywhere:
+
+  | Old (do not use) | New |
+  |---|---|
+  | `bg-cream` | `bg-platform` |
+  | `text-ink` / `bg-white` | `text-ink` / `bg-white` (unchanged) |
+  | `text-ink/60` | `text-mute` |
+  | `border-ink/10`, `border-ink/20` | `border-rail` |
+  | `bg-terracotta`, `text-terracotta` | `bg-signal` + `text-ink` on top, or `text-transit` for links |
+  | `bg-forest`, `text-forest` | `bg-ink` / `text-ink` (use `Button variant="secondary"`) |
+  | `rounded-lg`, `rounded-xl`, `shadow-sm` | `rounded-sm`, no shadow (use `border border-rail`) |
+  | serif headings | `font-display uppercase tracking-board` |
+  | any date/cost/duration/count text | wrap in `font-mono` (or the `.tabular` class) |
+
+  Recharts colors in Tasks 18 and 24 must also be re-derived from the new palette: `["#FFB000", "#1B4DFF", "#0E1116", "#6B747C", "#2A3138"]` instead of the old terracotta set.
 - AI calls go through Vercel AI Gateway using a plain `"provider/model"` string — never a direct `@ai-sdk/anthropic`-style provider package.
 - Server-side validation (zod) on every mutating endpoint, in addition to client-side validation.
 - Budget totals are computed server-side (`GET /api/trips/:id/budget`), never recomputed ad hoc on the client.
@@ -1127,10 +1147,16 @@ git commit -m "feat: stop-activity attach/detach, budget calculation service + e
 - Create: `client/src/styles/globals.css`
 - Create: `client/src/lib/lenis.ts`
 - Modify: `client/src/main.tsx`
-- Create: `client/src/components/ui/Button.tsx`, `client/src/components/ui/Card.tsx`
+- Create: `client/src/components/ui/Button.tsx`, `client/src/components/ui/Card.tsx`, `client/src/components/ui/RouteLine.tsx`
+- Test: `client/tests/RouteLine.test.tsx`
 
 **Interfaces:**
-- Produces: Tailwind theme colors `bg-cream`, `text-ink`, `bg-terracotta`, `bg-forest`; `useLenis()` hook; `<Button>`/`<Card>` components — every feature screen imports these.
+- Produces: Tailwind theme colors `bg-platform`, `text-ink`, `bg-ink`, `bg-board`, `border-rail`, `text-mute`, `bg-signal`, `text-transit`; font families `font-display`, `font-sans`, `font-mono`; tracking utility `tracking-board`; `useLenis()` hook; `<Button>`/`<Card>`/`<RouteLine>` components — every feature screen imports these.
+- `RouteLine` public API (Tasks 12, 15, 17, 19 all consume this — do not reinvent):
+  ```typescript
+  export interface RouteStop { id: string; label: string; meta?: string }
+  export function RouteLine(props: { stops: RouteStop[]; compact?: boolean }): JSX.Element
+  ```
 
 - [ ] **Step 1: Tailwind theme tokens**
 
@@ -1143,14 +1169,24 @@ export default {
   theme: {
     extend: {
       colors: {
-        cream: "#FBF7F0",
-        ink: "#1F1B16",
-        terracotta: { DEFAULT: "#C1543A", dark: "#9C4230" },
-        forest: { DEFAULT: "#2F4A3C", dark: "#213629" },
+        ink: "#0E1116",
+        board: "#2A3138",
+        platform: "#EFF1F3",
+        rail: "#D3D8DD",
+        mute: "#6B747C",
+        signal: "#FFB000",
+        transit: "#1B4DFF",
       },
       fontFamily: {
-        display: ["Fraunces", "serif"],
+        display: ['"Barlow Condensed"', "sans-serif"],
         sans: ["Inter", "sans-serif"],
+        mono: ['"JetBrains Mono"', "monospace"],
+      },
+      letterSpacing: {
+        board: "0.08em",
+      },
+      borderRadius: {
+        sm: "2px",
       },
     },
   },
@@ -1162,17 +1198,45 @@ export default {
 
 `client/src/styles/globals.css`:
 ```css
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-cream text-ink font-sans;
+:root {
+  --ink: #0e1116;
+  --board: #2a3138;
+  --platform: #eff1f3;
+  --rail: #d3d8dd;
+  --mute: #6b747c;
+  --signal: #ffb000;
+  --transit: #1b4dff;
 }
 
-h1, h2, h3, .font-display {
-  @apply font-display;
+body {
+  @apply bg-platform text-ink font-sans antialiased;
+}
+
+h1,
+h2,
+h3 {
+  @apply font-display uppercase tracking-board;
+}
+
+/* Times, costs, durations, stop numbers — the app's dominant content type. */
+.tabular {
+  @apply font-mono tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 ```
 
@@ -1185,13 +1249,17 @@ import Lenis from "lenis";
 
 export function useLenis() {
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
-    let frameId: number;
+
     function raf(time: number) {
       lenis.raf(time);
       frameId = requestAnimationFrame(raf);
     }
-    frameId = requestAnimationFrame(raf);
+
+    let frameId = requestAnimationFrame(raf);
+
     return () => {
       cancelAnimationFrame(frameId);
       lenis.destroy();
@@ -1200,24 +1268,34 @@ export function useLenis() {
 }
 ```
 
-- [ ] **Step 4: Base primitives**
+- [ ] **Step 4: Button and Card primitives**
+
+Transit-signage treatment: near-square corners (`rounded-sm` = 2px), condensed uppercase display type, amber signal for the primary action.
 
 `client/src/components/ui/Button.tsx`:
 ```tsx
 import { motion } from "framer-motion";
-import { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes } from "react";
 
 type Variant = "primary" | "secondary" | "ghost";
 
-export function Button({ variant = "primary", className = "", ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
-  const base = "px-5 py-2.5 rounded-lg font-medium transition-colors";
-  const variants: Record<Variant, string> = {
-    primary: "bg-terracotta text-cream hover:bg-terracotta-dark",
-    secondary: "bg-forest text-cream hover:bg-forest-dark",
-    ghost: "bg-transparent text-ink hover:bg-ink/5",
-  };
+const variants: Record<Variant, string> = {
+  primary: "bg-signal text-ink hover:brightness-95",
+  secondary: "bg-ink text-platform hover:bg-board",
+  ghost: "bg-transparent text-ink border border-rail hover:border-ink",
+};
+
+export function Button({
+  variant = "primary",
+  className = "",
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
   return (
-    <motion.button whileTap={{ scale: 0.97 }} className={`${base} ${variants[variant]} ${className}`} {...(props as any)} />
+    <motion.button
+      whileTap={{ scale: 0.98 }}
+      className={`rounded-sm px-5 py-2.5 font-display text-sm font-semibold uppercase tracking-board transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit ${variants[variant]} ${className}`}
+      {...(props as any)}
+    />
   );
 }
 ```
@@ -1225,14 +1303,14 @@ export function Button({ variant = "primary", className = "", ...props }: Button
 `client/src/components/ui/Card.tsx`:
 ```tsx
 import { motion } from "framer-motion";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <motion.div
-      whileHover={{ y: -4 }}
-      transition={{ type: "spring", stiffness: 300, damping: 24 }}
-      className={`bg-white rounded-xl shadow-sm border border-ink/10 overflow-hidden ${className}`}
+      whileHover={{ y: -3 }}
+      transition={{ type: "spring", stiffness: 320, damping: 26 }}
+      className={`overflow-hidden rounded-sm border border-rail bg-white ${className}`}
     >
       {children}
     </motion.div>
@@ -1240,22 +1318,146 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
 }
 ```
 
-- [ ] **Step 5: Wire globals.css into main.tsx**
+- [ ] **Step 5a: Wire up the client test runner (blocking — no `test` script exists yet)**
+
+`client/package.json` has vitest and Testing Library installed since Task 1 but no `test` script, so `npm run test --workspace client` currently fails. Add to `client/package.json` scripts:
+```json
+"test": "vitest run"
+```
+
+Create `client/vitest.config.ts`:
+```typescript
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./vitest.setup.ts"],
+    globals: true,
+  },
+});
+```
+
+Create `client/vitest.setup.ts`:
+```typescript
+import "@testing-library/jest-dom/vitest";
+```
+
+Verify: `npm run test --workspace client` runs (reporting "no test files found" is the expected result at this point, not an error).
+
+- [ ] **Step 5b: Write the failing RouteLine test**
+
+`client/tests/RouteLine.test.tsx`:
+```tsx
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { RouteLine } from "../src/components/ui/RouteLine";
+
+const stops = [
+  { id: "s1", label: "Tokyo", meta: "4 nights" },
+  { id: "s2", label: "Kyoto", meta: "3 nights" },
+];
+
+describe("RouteLine", () => {
+  it("renders each stop with a zero-padded sequence number", () => {
+    render(<RouteLine stops={stops} />);
+    expect(screen.getByText("Tokyo")).toBeInTheDocument();
+    expect(screen.getByText("Kyoto")).toBeInTheDocument();
+    expect(screen.getByText("01")).toBeInTheDocument();
+    expect(screen.getByText("02")).toBeInTheDocument();
+  });
+
+  it("renders stops as an ordered list, since itinerary order is meaningful", () => {
+    render(<RouteLine stops={stops} />);
+    const items = screen.getAllByRole("listitem");
+    expect(items).toHaveLength(2);
+  });
+});
+```
+
+- [ ] **Step 6: Run the test, verify it fails**
+
+Run: `npm run test --workspace client -- RouteLine`
+Expected: FAIL — `Cannot find module '../src/components/ui/RouteLine'`
+
+- [ ] **Step 7: Implement RouteLine — the signature element**
+
+A vertical track with stop nodes. The amber line is drawn by scaling a 1px bar from its top edge as scroll progresses through the list; nodes ignite from `rail` to `signal` as they enter the viewport. Scaling a bar (rather than animating an SVG path) keeps it robust against variable-height content.
+
+`client/src/components/ui/RouteLine.tsx`:
+```tsx
+import { useRef } from "react";
+import { motion, useScroll, useReducedMotion } from "framer-motion";
+
+export interface RouteStop {
+  id: string;
+  label: string;
+  meta?: string;
+}
+
+export function RouteLine({ stops, compact = false }: { stops: RouteStop[]; compact?: boolean }) {
+  const ref = useRef<HTMLOListElement>(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 0.9", "end 0.5"],
+  });
+
+  return (
+    <ol ref={ref} className="relative m-0 list-none p-0">
+      <span aria-hidden className="absolute bottom-2 left-[7px] top-2 w-px bg-rail" />
+      <motion.span
+        aria-hidden
+        style={{ scaleY: reduce ? 1 : scrollYProgress }}
+        className="absolute bottom-2 left-[7px] top-2 w-px origin-top bg-signal"
+      />
+      {stops.map((stop, i) => (
+        <li key={stop.id} className={`relative flex gap-4 ${compact ? "py-1.5" : "py-4"}`}>
+          <motion.span
+            aria-hidden
+            initial={reduce ? false : { backgroundColor: "#D3D8DD", scale: 0.8 }}
+            whileInView={{ backgroundColor: "#FFB000", scale: 1 }}
+            viewport={{ once: true, margin: "-20% 0px" }}
+            transition={{ duration: 0.35 }}
+            className="mt-1 h-[15px] w-[15px] shrink-0 rounded-full border-2 border-platform bg-rail"
+          />
+          <div className="min-w-0 flex-1">
+            <span className="font-mono text-xs text-mute">{String(i + 1).padStart(2, "0")}</span>
+            <p className={`font-display uppercase tracking-board ${compact ? "text-base" : "text-xl"}`}>
+              {stop.label}
+            </p>
+            {stop.meta && <p className="font-mono text-xs text-mute">{stop.meta}</p>}
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+```
+
+- [ ] **Step 8: Run the test, verify it passes**
+
+Run: `npm run test --workspace client -- RouteLine`
+Expected: PASS
+
+- [ ] **Step 9: Wire globals.css into main.tsx**
 
 Modify `client/src/main.tsx` — add as first import:
 ```typescript
 import "./styles/globals.css";
 ```
 
-- [ ] **Step 6: Verify visually**
+- [ ] **Step 10: Verify visually**
 
-Run: `npm run dev --workspace client`, open browser, confirm cream background + Fraunces/Inter fonts load (check Network tab or computed styles).
+Run: `npm run dev --workspace client`, open the browser. Confirm: cool grey `platform` background (not cream), Barlow Condensed rendering uppercase for headings, JetBrains Mono for the stop numbers, and the amber line drawing as you scroll a `RouteLine`.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 11: Commit**
 
 ```bash
-git add client/tailwind.config.ts client/src/styles client/src/lib/lenis.ts client/src/main.tsx client/src/components/ui
-git commit -m "feat: design tokens, fonts, Lenis smooth scroll, Button/Card primitives"
+git add client/tailwind.config.ts client/package.json client/vitest.config.ts client/vitest.setup.ts client/src/styles client/src/lib/lenis.ts client/src/main.tsx client/src/components/ui client/tests/RouteLine.test.tsx
+git commit -m "feat: transit-systems design tokens, fonts, Lenis, Button/Card/RouteLine primitives"
 ```
 
 ---

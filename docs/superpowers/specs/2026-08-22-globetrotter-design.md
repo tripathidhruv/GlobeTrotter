@@ -8,7 +8,9 @@ Odoo x LDCE Ahmedabad Hackathon '26. Virtual round, ~4 days available. Goal: bes
 2. Full feature coverage of the 13 screens in the brief, including the optional Admin/Analytics screen.
 3. Two differentiators beyond the brief: live collaborative trip editing, AI trip-suggestion assist.
 
-Visual direction is fully custom (not copied from any reference mockup): warm editorial travel aesthetic — cream/off-white base, deep terracotta primary accent, forest-green secondary accent, serif display headings, clean sans body/UI, generous whitespace, photo-forward cards.
+Visual direction is fully custom (not copied from any reference mockup): **transit-systems aesthetic** — the visual language of departure boards, metro maps, and rail timetables, grounded in what a multi-city itinerary actually is (an ordered route through places and time).
+
+Rationale for this direction over the originally-considered warm-editorial look: cream base + serif display + terracotta accent is currently the single most common AI-generated design look, so it risks colliding with other AI-assisted hackathon entries — directly undercutting the "best UI in the hackathon" goal. It is also a travel-*brochure* language, whereas GlobeTrotter is a data-dense *planner* (dates, costs, durations, day-by-day breakdowns); a utility/mono-led treatment serves that content instead of fighting it.
 
 ## 2. Stack
 
@@ -148,11 +150,34 @@ Realtime: client subscribes to a Supabase Realtime channel `trip:{id}` on Stop/S
 
 ## 7. Design System Detail
 
-- **Color tokens**: cream base (`#FBF7F0`), ink text (`#1F1B16`), terracotta primary (`#C1543A`-range), forest-green secondary (`#2F4A3C`-range), neutral grays for borders/muted text. Defined as CSS variables / Tailwind theme extension, light mode only for v1 (no dark mode requirement in brief).
-- **Type**: serif display (Fraunces) for H1/H2 and trip names, sans (Inter) for everything else — deliberately distinct from the reference file's Playfair Display + DM Sans pairing. Google Fonts.
-- **Cards**: photo-forward, soft shadow, rounded-lg, hover lift (Framer Motion `whileHover`).
-- **Motion rules**: Lenis wired globally for smooth scroll. Framer Motion `AnimatePresence` for route transitions (fade + slight y-offset). Scroll-reveal (fade/slide-in on viewport enter) used on Dashboard and Itinerary View sections only — never on forms, tables, or the Budget screen where users need to scan numbers without motion interference.
-- **Component reuse rule**: before hand-building an interactive primitive, check Animate UI; before hand-building a scroll effect, check Lenis/Framer patterns already in the codebase.
+- **Color tokens** (Tailwind theme extension + CSS variables):
+
+  | Token | Hex | Role |
+  |---|---|---|
+  | `ink` | `#0E1116` | dark "board" surface + primary text |
+  | `board` | `#2A3138` | secondary / muted board surface |
+  | `platform` | `#EFF1F3` | page base — cool enamel grey (deliberately not a cream) |
+  | `rail` | `#D3D8DD` | hairline rules, borders, "track" lines |
+  | `mute` | `#6B747C` | secondary/muted text |
+  | `signal` | `#FFB000` | primary accent — departure-board amber |
+  | `transit` | `#1B4DFF` | secondary accent, links, secondary route lines |
+
+  Token names deliberately avoid `slate` and `amber`, which would shadow Tailwind's built-in color scales and break any `slate-500`/`amber-400` usage.
+
+  Light-first (no dark-mode toggle required by the brief), but with **dark `ink` bands used as a deliberate contrast device** for hero sections and day headers, against light `platform` reading surfaces. The signal color is departure-board amber rather than vermilion, chosen to stay clear of the near-black + bright-vermilion AI-default look as well.
+
+- **Type** (Google Fonts):
+  - Display: **Barlow Condensed**, 600/700, uppercase, tight tracking — transit/signage gothic. Chosen over Bebas Neue and Oswald as the less-overused option in the same register.
+  - Body/UI: **Inter**, 400/500/600.
+  - Data: **JetBrains Mono** — all times, costs, dates, durations, and stop numbers. The app is mostly this kind of data, so the mono treatment is where the design's personality actually lands, not a decorative afterthought.
+
+- **Structure**: horizontal hairline `rail` rules as timetable rows for dense data (Budget, Calendar, Activity lists) — rows, not cards. Cards reserved for places where a trip is an object to pick (Dashboard, My Trips). Numbered stop markers (`01` / `02` / `03`) are used because a multi-city itinerary genuinely is an ordered sequence — the order carries information the reader needs.
+
+- **Signature element**: the **route line** — an SVG line with stop nodes, drawn via `stroke-dashoffset` tied to scroll progress, with nodes igniting amber as they enter the viewport. Reused as one coherent system across Dashboard (compact per-trip variant), Itinerary Builder (the drag-reorder list *is* the line), Itinerary View, and Calendar. Built once as a shared primitive (`RouteLine`) rather than reinvented per screen.
+
+- **Motion rules**: Lenis wired globally for smooth scroll. Framer Motion for route transitions (`AnimatePresence`, fade + slight y-offset), the route-line draw, node activation, and drag-to-reorder. Scroll-driven motion is confined to the route line and to Dashboard/Itinerary View section reveals — never on forms, tables, or the Budget screen, where users need to scan numbers without motion interference. `prefers-reduced-motion` is respected: the route line renders fully drawn, reveals resolve to their end state.
+
+- **Component reuse rule**: before hand-building an interactive primitive, check Animate UI; before hand-building a scroll effect, check Lenis/Framer patterns already in the codebase; before building anything route-shaped, use the shared `RouteLine` primitive.
 
 ## 8. Realtime Collaboration — Scope
 
