@@ -10,6 +10,7 @@ import { SignupPage } from "./features/auth/SignupPage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { CreateTripPage } from "./features/trips/CreateTripPage";
 import { MyTripsPage } from "./features/trips/MyTripsPage";
+import { CitySearchPage } from "./features/cities/CitySearchPage";
 
 export default function App() {
   useLenis();
@@ -46,6 +47,16 @@ export default function App() {
                 <ProtectedRoute>
                   <AppShell>
                     <MyTripsPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trips/:id/cities"
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <CitySearchPage />
                   </AppShell>
                 </ProtectedRoute>
               }

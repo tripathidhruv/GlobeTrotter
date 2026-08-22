@@ -16,6 +16,27 @@ export function useTrips() {
   return useQuery({ queryKey: ["trips"], queryFn: () => apiFetch<Trip[]>("/trips") });
 }
 
+export interface TripStop {
+  id: string;
+  tripId: string;
+  cityId: string;
+  orderIndex: number;
+  arrivalDate: string;
+  departureDate: string;
+}
+
+export interface TripDetail extends Trip {
+  stops: TripStop[];
+}
+
+export function useTrip(tripId?: string) {
+  return useQuery({
+    queryKey: ["trip", tripId],
+    queryFn: () => apiFetch<TripDetail>(`/trips/${tripId}`),
+    enabled: !!tripId,
+  });
+}
+
 export interface CreateTripInput {
   name: string;
   description?: string;

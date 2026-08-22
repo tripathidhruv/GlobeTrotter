@@ -83,6 +83,8 @@ model City {
   imageUrl        String?
   stops           Stop[]
   activities      Activity[]
+
+  @@unique([name, country])
 }
 
 model Stop {
@@ -108,6 +110,8 @@ model Activity {
   estCost            Float          @default(0)
   estDurationMinutes Int            @default(60)
   stopActivities     StopActivity[]
+
+  @@unique([cityId, name])
 }
 
 model StopActivity {
