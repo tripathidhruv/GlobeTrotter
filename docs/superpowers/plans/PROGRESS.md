@@ -5,8 +5,8 @@ Spec: `docs/superpowers/specs/2026-08-22-globetrotter-design.md`
 
 Update this file's checkbox + "Last completed" line after EVERY task finishes (commit lands). If switching Claude accounts/sessions mid-build: open this file first, tell the new session "resume GlobeTrotter build, see docs/superpowers/plans/PROGRESS.md", it picks up at "Next task".
 
-**Last completed:** Task 4 — Auth middleware + trips list/create endpoints (commits 3a2acc5, 57e7b77)
-**Next task:** Task 5 — Trip detail/update/delete + Stop CRUD endpoints
+**Last completed:** Task 5 — Trip detail/update/delete + Stop CRUD endpoints (commits a8e62c9, 54ae089)
+**Next task:** Task 6 — Cities + Activities search endpoints
 
 ## Tasks
 
@@ -14,7 +14,7 @@ Update this file's checkbox + "Last completed" line after EVERY task finishes (c
 - [x] 2. Prisma schema + seed data
 - [x] 3. Express app skeleton + Vercel serverless entry
 - [x] 4. Auth middleware + trips list/create endpoints
-- [ ] 5. Trip detail/update/delete + Stop CRUD endpoints
+- [x] 5. Trip detail/update/delete + Stop CRUD endpoints
 - [ ] 6. Cities + Activities search endpoints
 - [ ] 7. StopActivity attach/detach + budget service + budget endpoint
 - [ ] 8. Design tokens, fonts, Lenis, base UI primitives
@@ -51,3 +51,6 @@ Update this file's checkbox + "Last completed" line after EVERY task finishes (c
 - `server/tsconfig.json` now has `outDir: "./dist"` enabled (was commented out) and `.gitignore` covers `/dist`.
 - `npm run dev --workspace server` now uses `tsx watch src/index.ts` (not `ts-node-dev`, which is CJS-only and incompatible with this project's `"type": "module"`).
 - `server/src/index.ts` loads `dotenv/config` at the top so `SUPABASE_URL`/`SUPABASE_SERVICE_KEY`/`DATABASE_URL` are populated at runtime, not just in tests (`server/vitest.setup.ts` handles the test-time equivalent, added in this task).
+- **Plan gap found + fixed (user-approved) in Task 5:** the plan's brief for trip/stop mutation routes had no ownership check — any authenticated user could edit/delete any trip/stop by ID. Fixed: trip metadata PATCH/DELETE is now owner-only; stop PATCH/DELETE and `POST /trips/:id/stops` are owner-or-collaborator; unauthorized GET on a trip returns 403; trip PATCH body uses a `.strict()` zod schema (rejects `ownerId`/`isPublic`/`shareSlug`/`id` in the payload with 400 instead of silently stripping them).
+- **Known follow-up for Task 22 (collaborator roles):** `TripCollaborator.role` (`editor`/`viewer`) exists in the schema but is NOT yet enforced anywhere — any collaborator (even role `viewer`) can currently PATCH/DELETE/create stops. Task 22 should add the role check when it builds out collaborator management, or a dedicated fix should land before demo if viewer-only collaborators are actually used.
+- `server/vitest.config.ts` has `fileParallelism: false` (tests run against a real shared Supabase DB with fixed fixture IDs, not an isolated per-test DB) — a stopgap, will need revisiting if the test suite grows much larger (per-test unique IDs or a sandboxed schema would scale better).
