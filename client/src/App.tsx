@@ -11,6 +11,7 @@ import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { CreateTripPage } from "./features/trips/CreateTripPage";
 import { MyTripsPage } from "./features/trips/MyTripsPage";
 import { CitySearchPage } from "./features/cities/CitySearchPage";
+import { NotFoundPage } from "./features/shared/NotFoundPage";
 import { ItineraryBuilderPage } from "./features/itinerary/ItineraryBuilderPage";
 
 export default function App() {
@@ -70,6 +71,14 @@ export default function App() {
                     <ItineraryBuilderPage />
                   </AppShell>
                 </ProtectedRoute>
+              }
+            />
+            <Route
+              path="*"
+              element={
+                <AppShell>
+                  <NotFoundPage />
+                </AppShell>
               }
             />
           </Routes>

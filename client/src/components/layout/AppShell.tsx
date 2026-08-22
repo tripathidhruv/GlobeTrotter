@@ -2,8 +2,9 @@ import { ReactNode, useEffect, useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 
 const navLinks = [
+  { to: "/", label: "Board" },
   { to: "/trips", label: "My Trips" },
-  { to: "/settings", label: "Settings" },
+  { to: "/trips/new", label: "Plan Trip" },
 ];
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
