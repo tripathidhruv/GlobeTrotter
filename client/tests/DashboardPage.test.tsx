@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { useReducedMotion } from "framer-motion";
 import { DashboardPage } from "../src/features/dashboard/DashboardPage";
 import { useTrips } from "../src/features/trips/useTrips";
 import { useCities } from "../src/features/cities/useCities";
@@ -10,6 +11,11 @@ import { useTripBudget } from "../src/features/budget/useTripBudget";
 vi.mock("../src/features/trips/useTrips", () => ({ useTrips: vi.fn() }));
 vi.mock("../src/features/cities/useCities", () => ({ useCities: vi.fn() }));
 vi.mock("../src/features/budget/useTripBudget", () => ({ useTripBudget: vi.fn() }));
+
+vi.mock("framer-motion", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("framer-motion")>();
+  return { ...actual, useReducedMotion: vi.fn() };
+});
 
 function renderDashboard() {
   const qc = new QueryClient();
@@ -43,6 +49,7 @@ describe("DashboardPage", () => {
       isLoading: false,
       isError: false,
     } as any);
+    vi.mocked(useReducedMotion).mockReturnValue(false);
   });
 
   it("renders trip cards from useTrips", () => {
@@ -94,5 +101,24 @@ describe("DashboardPage", () => {
     expect(screen.queryByText("$1,234")).not.toBeInTheDocument();
     expect(screen.queryByText(/budget details aren't available/i)).not.toBeInTheDocument();
     expect(screen.getByText(/couldn't load the budget/i)).toBeInTheDocument();
+  });
+
+  it("scroll-reveals trip cards via framer-motion when reduced motion is not preferred", () => {
+    vi.mocked(useReducedMotion).mockReturnValue(false);
+    renderDashboard();
+    const cardLink = screen.getByText("Japan Trip").closest("a");
+    // framer-motion applies the `initial` style (opacity/transform) synchronously on mount,
+    // which is how we can tell the card is wrapped in a scroll-driven motion.div.
+    expect(cardLink?.parentElement?.getAttribute("style")).toContain("opacity");
+  });
+
+  it("registers no scroll-driven animation on trip cards when reduced motion is preferred", () => {
+    vi.mocked(useReducedMotion).mockReturnValue(true);
+    renderDashboard();
+    const cardLink = screen.getByText("Japan Trip").closest("a");
+    // No motion.div wrapper at all under reduced motion, so no framer-motion-applied
+    // inline style exists anywhere between the card link and the grid container.
+    expect(cardLink?.parentElement?.getAttribute("style")).toBeNull();
+    expect(cardLink?.parentElement?.parentElement?.getAttribute("style")).toBeNull();
   });
 });

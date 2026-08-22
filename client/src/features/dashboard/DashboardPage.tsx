@@ -24,6 +24,43 @@ function findNearestUpcomingTrip(trips: Trip[] | undefined): Trip | undefined {
   )[0];
 }
 
+function TripCardContent({ trip }: { trip: Trip }) {
+  return (
+    <Link to={`/trips/${trip.id}`}>
+      <Card className="p-5">
+        <h2 className="font-display text-lg uppercase tracking-board">{trip.name}</h2>
+        <div className="mt-3">
+          <RouteLine
+            compact
+            stops={[
+              { id: `${trip.id}-depart`, label: "Depart", meta: formatDate(trip.startDate) },
+              { id: `${trip.id}-return`, label: "Return", meta: formatDate(trip.endDate) },
+            ]}
+          />
+        </div>
+      </Card>
+    </Link>
+  );
+}
+
+/** Scroll-reveals the trip card, unless reduced motion is preferred — in which case no
+ * scroll-driven animation is registered at all and the card renders in its end state. */
+function TripCard({ trip, index, reduce }: { trip: Trip; index: number; reduce: boolean }) {
+  if (reduce) {
+    return <TripCardContent trip={trip} />;
+  }
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.05 }}
+    >
+      <TripCardContent trip={trip} />
+    </motion.div>
+  );
+}
+
 export function DashboardPage() {
   const { data: trips, isLoading: tripsLoading, isError: tripsError } = useTrips();
   const { data: cities, isLoading: citiesLoading, isError: citiesError } = useCities();
@@ -33,7 +70,7 @@ export function DashboardPage() {
     isLoading: budgetLoading,
     isError: budgetError,
   } = useTripBudget(nearestTrip?.id);
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotion() ?? false;
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -56,28 +93,7 @@ export function DashboardPage() {
 
       <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
         {trips?.map((trip, i) => (
-          <motion.div
-            key={trip.id}
-            initial={reduce ? false : { opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: reduce ? 0 : i * 0.05 }}
-          >
-            <Link to={`/trips/${trip.id}`}>
-              <Card className="p-5">
-                <h2 className="font-display text-lg uppercase tracking-board">{trip.name}</h2>
-                <div className="mt-3">
-                  <RouteLine
-                    compact
-                    stops={[
-                      { id: `${trip.id}-depart`, label: "Depart", meta: formatDate(trip.startDate) },
-                      { id: `${trip.id}-return`, label: "Return", meta: formatDate(trip.endDate) },
-                    ]}
-                  />
-                </div>
-              </Card>
-            </Link>
-          </motion.div>
+          <TripCard key={trip.id} trip={trip} index={i} reduce={reduce} />
         ))}
       </div>
 
