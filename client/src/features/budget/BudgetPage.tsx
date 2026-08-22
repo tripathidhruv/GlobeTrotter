@@ -241,7 +241,7 @@ export function BudgetPage() {
                             />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(value: number) => currency.format(value)} />
+                        <Tooltip formatter={(value) => currency.format(Number(value))} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -295,7 +295,7 @@ export function BudgetPage() {
                           axisLine={false}
                           tickLine={false}
                         />
-                        <Tooltip formatter={(value: number) => currency.format(value)} labelFormatter={formatDayLabel} />
+                        <Tooltip formatter={(value) => currency.format(Number(value))} labelFormatter={(label) => formatDayLabel(String(label))} />
                         <Bar dataKey="value" isAnimationActive={!reduce} radius={[2, 2, 0, 0]}>
                           {dayData.map((entry) => (
                             <Cell

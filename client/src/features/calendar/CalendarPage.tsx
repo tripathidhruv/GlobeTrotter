@@ -332,7 +332,7 @@ function MonthGrid({
 
 function DayDetailPanel({
   day,
-  reduce,
+  reduce: _reduce,
 }: {
   day: DayEntry;
   reduce: boolean;

@@ -1,10 +1,13 @@
-import { ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { NavLink, Link, useParams, useLocation } from "react-router-dom";
 
 const navLinks = [
   { to: "/", label: "Board" },
   { to: "/trips", label: "My Trips" },
   { to: "/trips/new", label: "Plan Trip" },
+  { to: "/settings", label: "Settings" },
+  { to: "/admin", label: "Admin" },
 ];
 
 function navLinkClass({ isActive }: { isActive: boolean }) {

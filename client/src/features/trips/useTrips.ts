@@ -27,7 +27,10 @@ export interface TripStop {
   departureDate: string;
 }
 
-export interface TripDetail extends Trip {
+// The detail endpoint returns full stop objects, where the list endpoint
+// returns only the first stop's city for the card image — so this deliberately
+// overrides rather than extends `Trip["stops"]`.
+export interface TripDetail extends Omit<Trip, "stops"> {
   stops: TripStop[];
 }
 

@@ -52,9 +52,9 @@ function StopActivityRow({
 
 function StopCard({
   stop,
-  index,
+  index: _index,
   tripId,
-  reduce,
+  reduce: _reduce,
   onRequestDelete,
 }: {
   stop: TripStop;
