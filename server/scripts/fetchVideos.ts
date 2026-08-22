@@ -39,7 +39,7 @@ if (!PEXELS_API_KEY) {
   process.exit(1);
 }
 
-const CITIES = ["Paris", "Tokyo", "New York City", "Rome", "Barcelona", "Lisbon"];
+const CITIES = ["Paris", "Tokyo", "New York City", "Rome", "Barcelona", "Lisbon", "Istanbul", "Marrakesh", "Reykjavik", "Kyoto"];
 
 const OUT_DIR = path.join(__dirname, "..", "..", "client", "public", "video");
 

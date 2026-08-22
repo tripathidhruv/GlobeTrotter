@@ -5,11 +5,12 @@ import { Button } from "../../components/ui/Button";
 import { FeatureReel, type ReelItem } from "../../components/ui/FeatureReel";
 import { useCities } from "../cities/useCities";
 
+// Deliberately distinct from the dashboard hero's reel.
 const INSPIRATION_CLIPS = [
-  { src: "/video/rome.mp4", label: "Rome" },
-  { src: "/video/tokyo.mp4", label: "Tokyo" },
-  { src: "/video/barcelona.mp4", label: "Barcelona" },
-  { src: "/video/lisbon.mp4", label: "Lisbon" },
+  { src: "/video/istanbul.mp4", label: "Istanbul" },
+  { src: "/video/marrakesh.mp4", label: "Marrakesh" },
+  { src: "/video/reykjavik.mp4", label: "Reykjavik" },
+  { src: "/video/kyoto.mp4", label: "Kyoto" },
 ];
 
 const inputClass =
