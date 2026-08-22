@@ -5,8 +5,8 @@ Spec: `docs/superpowers/specs/2026-08-22-globetrotter-design.md`
 
 Update this file's checkbox + "Last completed" line after EVERY task finishes (commit lands). If switching Claude accounts/sessions mid-build: open this file first, tell the new session "resume GlobeTrotter build, see docs/superpowers/plans/PROGRESS.md", it picks up at "Next task".
 
-**Last completed:** Task 10 — Auth screens (Login/Signup) (commits 7001bc5, d317b46, d06bb00)
-**Next task:** Task 11 — API client + trips query hooks
+**Last completed:** Task 12 — Dashboard screen (commits 9d01b43, 1c29ed4, e384799)
+**Next task:** Task 13 — Create Trip + My Trips screens
 
 ## Tasks
 
@@ -20,8 +20,8 @@ Update this file's checkbox + "Last completed" line after EVERY task finishes (c
 - [x] 8. Design tokens, fonts, Lenis, base UI primitives
 - [x] 9. App shell — router, protected routes, page transitions
 - [x] 10. Auth screens (Login/Signup)
-- [ ] 11. API client + trips query hooks
-- [ ] 12. Dashboard screen
+- [x] 11. API client + trips query hooks
+- [x] 12. Dashboard screen
 - [ ] 13. Create Trip + My Trips screens
 - [ ] 14. City Search screen
 - [ ] 15. Itinerary Builder screen (drag-reorder)
@@ -84,3 +84,24 @@ Signature element: **`RouteLine`** (`client/src/components/ui/RouteLine.tsx`) �
   - **Verification method to reuse:** don't trust "it looked right in the dev server." Run `npx vite build` in `client/`, then grep `client/dist/assets/*.css` for the utility classes you expect. If a class produces no rule, it silently doesn't exist.
 - Client code does NOT use `.js` import extensions (that's server-only).
 - `client/` now has a real test runner: `test` script + `vitest.config.ts` + `vitest.setup.ts` (with IntersectionObserver/ResizeObserver stubs, needed because jsdom lacks them and framer-motion's `whileInView`/`useScroll` require them).
+
+## Task 11-12 notes
+
+- **Fresh clones must run `npx prisma generate` in `server/`** before the server or its tests will run — `server/generated/prisma` is gitignored. Without it the whole server suite fails with `Cannot find module '../generated/prisma/client.js'`.
+- `client/vite.config.ts` now proxies `/api` to `http://localhost:3001` for local dev (apiClient calls `/api/*`, which would otherwise 404 against Vite). Production serves both from one Vercel project, so no proxy is needed there.
+- `apiFetch` merges headers via the `Headers` constructor with **caller-wins precedence** — defaults (`Content-Type`, `Authorization`) are applied first, then any caller-supplied header overrides them. Works with all three valid `RequestInit["headers"]` shapes.
+- `Trip.description` and `Trip.coverPhotoUrl` are typed `string | null` on the client, matching the nullable Prisma columns — the API returns `null`, not `undefined`, for unset values.
+- Dashboard renders three sections (trip cards, recommended cities, budget highlight), all against real endpoints, with distinct loading / error / empty states. Error states are checked explicitly so an API failure never renders as an innocuous empty state.
+- **Reduced-motion pattern:** branch on `useReducedMotion()` and return an unwrapped tree, do NOT merely gate `initial`/`transition` props on an always-present `motion.div` — a live `whileInView` still registers a scroll animation. See `TripCard`/`TripCardContent` in `DashboardPage.tsx` and `RouteLine.tsx`.
+
+## Deviation from plan: scope widened on Dashboard (Task 12)
+
+The plan's Task 12 brief rendered only trip cards + a "Plan New Trip" button. The design spec (section 6, row 2) and the hackathon problem statement (screen 2) both additionally require **recommended cities** and a **budget highlight**, and spec section 7 names the Dashboard as a required consumer of the shared `RouteLine` primitive. All three were added, using endpoints that already existed. Tasks 13+ should expect the same treatment: where the plan's brief is thinner than the spec, the spec wins.
+
+## Catalog data gap (blocks good demos of Tasks 14 + 16)
+
+The live database holds only **1 city (Lisbon) and 3 activities**. `server/prisma/seed.ts` creates Paris/Tokyo but has evidently never run successfully against this database, and it is not idempotent (plain `create`/`createMany` — re-running duplicates rows). City Search (Task 14) and Activity Search (Task 16) will have almost nothing to show until a real catalog is imported. Task 14 must load genuine reference data with upserts, and populate `City.imageUrl` / `Activity.imageUrl` so cards get real photography.
+
+## Visual direction: keep transit, add weight (user decision)
+
+The transit-systems direction stays. The design system was verified rendering correctly (platform `#EFF1F3` base, ink `#0E1116` text, rail `#D3D8DD`, signal `#FFB000`, all three fonts loading). But screens from Task 13 onward must carry more visual weight, inside the existing token set: a full-bleed `bg-ink` band as a hero/section device on each screen, stronger `signal` accent presence, real imagery wherever the schema supports it, and richer motion (staggered reveals, route-line draw, hover states) — always guarded by `useReducedMotion`.
