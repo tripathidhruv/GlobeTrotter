@@ -54,7 +54,8 @@ describe("DashboardPage", () => {
 
   it("renders trip cards from useTrips", () => {
     renderDashboard();
-    expect(screen.getByText("Japan Trip")).toBeInTheDocument();
+    // The trip name shows in both the hero departure board and the trip rows.
+    expect(screen.getAllByText("Japan Trip").length).toBeGreaterThan(0);
   });
 
   it("renders recommended cities from useCities", () => {
@@ -107,7 +108,10 @@ describe("DashboardPage", () => {
   it("scroll-reveals trip cards via framer-motion when reduced motion is not preferred", () => {
     vi.mocked(useReducedMotion).mockReturnValue(false);
     renderDashboard();
-    const cardLink = screen.getByText("Japan Trip").closest("a");
+    const cardLink = screen
+      .getAllByText("Japan Trip")
+      .map((el) => el.closest("a"))
+      .find((a): a is HTMLAnchorElement => a !== null);
     // framer-motion applies the `initial` style (opacity/transform) synchronously on mount,
     // which is how we can tell the card is wrapped in a scroll-driven motion.div.
     expect(cardLink?.parentElement?.getAttribute("style")).toContain("opacity");
@@ -116,7 +120,10 @@ describe("DashboardPage", () => {
   it("registers no scroll-driven animation on trip cards when reduced motion is preferred", () => {
     vi.mocked(useReducedMotion).mockReturnValue(true);
     renderDashboard();
-    const cardLink = screen.getByText("Japan Trip").closest("a");
+    const cardLink = screen
+      .getAllByText("Japan Trip")
+      .map((el) => el.closest("a"))
+      .find((a): a is HTMLAnchorElement => a !== null);
     // No motion.div wrapper at all under reduced motion, so no framer-motion-applied
     // inline style exists anywhere between the card link and the grid container.
     expect(cardLink?.parentElement?.getAttribute("style")).toBeNull();

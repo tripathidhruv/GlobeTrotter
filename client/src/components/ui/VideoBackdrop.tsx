@@ -51,7 +51,8 @@ export function VideoBackdrop({
           }
         />
       ))}
-      <div className="absolute inset-0 bg-ink/70" />
+      <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/75 to-ink/35" />
+      <div className="absolute inset-0 bg-gradient-to-t from-ink via-transparent to-ink/40" />
     </div>
   );
 }
@@ -103,7 +104,7 @@ function VideoLayer({
   return (
     <motion.div className="absolute inset-0" style={{ opacity }}>
       <video
-        className="h-full w-full object-cover"
+        className="h-full w-full object-cover [filter:saturate(1.15)_contrast(1.05)]"
         muted
         playsInline
         loop
