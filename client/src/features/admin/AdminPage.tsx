@@ -253,7 +253,7 @@ export function AdminPage() {
                           axisLine={false}
                           tickLine={false}
                         />
-                        <Tooltip labelFormatter={formatDay} />
+                        <Tooltip labelFormatter={(label) => formatDay(String(label))} />
                         <Bar dataKey="count" isAnimationActive={!reduce} radius={[2, 2, 0, 0]}>
                           {stats.tripsOverTime.map((entry, i) => (
                             <Cell key={entry.date} fill={PALETTE[i % PALETTE.length]} />
