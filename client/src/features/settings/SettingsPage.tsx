@@ -48,7 +48,7 @@ function Reveal({
 }
 
 const inputClasses =
-  "w-full rounded-sm border border-platform/25 bg-ink px-3 py-2 text-sm text-platform outline-none transition-colors focus:border-signal [color-scheme:dark]";
+  "w-full rounded-sm border border-rail bg-platform px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-signal";
 
 export function SettingsPage() {
   const { data: profile, isLoading, isError } = useProfile();
@@ -158,9 +158,9 @@ export function SettingsPage() {
             <Reveal index={0} reduce={reduce}>
               <form
                 onSubmit={handleSave}
-                className="rounded-sm border border-rail bg-board p-8"
+                className="rounded-sm border border-rail bg-platform p-8"
               >
-                <h2 className="font-display text-lg uppercase tracking-board text-platform">
+                <h2 className="font-display text-lg uppercase tracking-board text-ink">
                   Ticket details
                 </h2>
 
@@ -191,7 +191,7 @@ export function SettingsPage() {
                       readOnly
                       className={`mt-2 ${inputClasses} cursor-not-allowed opacity-60`}
                     />
-                    <p className="mt-2 font-mono text-[10px] uppercase text-platform/40">
+                    <p className="mt-2 font-mono text-[10px] uppercase text-mute">
                       Managed by your sign-in provider. Cannot be changed here.
                     </p>
                   </div>
@@ -249,11 +249,11 @@ export function SettingsPage() {
             </Reveal>
 
             <Reveal index={1} reduce={reduce} className="mt-10">
-              <div className="rounded-sm border border-rail bg-board p-8">
-                <h2 className="font-display text-lg uppercase tracking-board text-platform">
+              <div className="rounded-sm border border-rail bg-platform p-8">
+                <h2 className="font-display text-lg uppercase tracking-board text-ink">
                   Destinations visited on your trips
                 </h2>
-                <p className="mt-1 font-mono text-[10px] uppercase text-platform/40">
+                <p className="mt-1 font-mono text-[10px] uppercase text-mute">
                   Derived from your trips' first stops — not a separate saved-destinations list.
                 </p>
                 {destinations.length === 0 ? (
@@ -265,10 +265,10 @@ export function SettingsPage() {
                         key={`${city.name}-${city.country}-${i}`}
                         className="flex items-center justify-between py-4 text-sm"
                       >
-                        <span className="font-display uppercase tracking-board text-platform">
+                        <span className="font-display uppercase tracking-board text-ink">
                           {city.name}
                         </span>
-                        <span className="font-mono text-xs text-platform/50">{city.country}</span>
+                        <span className="font-mono text-xs text-mute">{city.country}</span>
                       </li>
                     ))}
                   </ul>
@@ -292,7 +292,7 @@ export function SettingsPage() {
         <section className="mt-4 bg-ink py-16 text-platform">
           <div className="mx-auto max-w-4xl px-6">
             <Reveal index={2} reduce={reduce}>
-              <div className="rounded-sm border border-signal/50 bg-board p-8">
+              <div className="rounded-sm border border-signal/50 bg-platform p-8">
                 <p className="font-mono text-xs uppercase tracking-board text-signal">Irreversible</p>
                 <h2 className="mt-2 font-display text-2xl uppercase tracking-board text-signal">
                   Danger zone
