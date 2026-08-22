@@ -104,6 +104,23 @@ function AttachForm({
   );
 }
 
+function ActivityPhoto({ activity, stop }: { activity: Activity; stop: TripStop | undefined }) {
+  const [failed, setFailed] = useState(false);
+  const src = activity.imageUrl ?? stop?.city.imageUrl ?? null;
+  if (!src || failed) {
+    return <div className="h-20 w-28 flex-shrink-0 rounded-sm bg-board" />;
+  }
+  return (
+    <img
+      src={src}
+      alt=""
+      loading="lazy"
+      onError={() => setFailed(true)}
+      className="h-20 w-28 flex-shrink-0 rounded-sm object-cover transition-all duration-300 group-hover:scale-105 group-hover:brightness-110"
+    />
+  );
+}
+
 function ActivityRow({
   activity,
   stop,
@@ -141,60 +158,54 @@ function ActivityRow({
   }
 
   const content = (
-    <div className="border-b border-rail py-4 transition-colors hover:bg-platform/60">
-      <div className="flex items-start justify-between gap-4 px-1">
-        <div className="min-w-0 flex-1">
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            className="text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit"
-          >
-            <h3 className="font-display text-base uppercase tracking-board text-ink">
-              {activity.name}
-            </h3>
-            <p className="mt-1 font-mono text-[11px] uppercase tracking-board text-mute">
-              {activity.category}
-            </p>
-          </button>
-          {expanded && (
-            <div className="mt-3 max-w-xl space-y-3">
-              {activity.imageUrl && (
-                <img
-                  src={activity.imageUrl}
-                  alt={activity.name}
-                  className="h-40 w-full rounded-sm object-cover"
-                />
-              )}
-              {activity.description && (
+    <div className="group border-b border-rail py-4 transition-colors hover:bg-platform/60">
+      <div className="flex gap-4">
+        <ActivityPhoto activity={activity} stop={stop} />
+        <div className="flex min-w-0 flex-1 items-start justify-between gap-4 px-1">
+          <div className="min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit"
+            >
+              <h3 className="font-display text-base uppercase tracking-board text-ink">
+                {activity.name}
+              </h3>
+              <span className="mt-1 inline-block rounded-sm border border-rail px-2 py-0.5 font-mono text-[10px] uppercase tracking-board text-mute">
+                {activity.category}
+              </span>
+            </button>
+            {expanded && activity.description && (
+              <div className="mt-3 max-w-xl">
                 <p className="text-sm text-mute">{activity.description}</p>
-              )}
-            </div>
-          )}
-        </div>
-        <div className="flex-shrink-0 text-right text-sm text-mute">
-          <div className="font-mono">{activity.estDurationMinutes}min</div>
-          <div className="font-mono text-ink">{money(activity.estCost)}</div>
-        </div>
-        <div className="flex-shrink-0">
-          {alreadyAttached ? (
-            <span className="font-display text-xs uppercase tracking-board text-signal">
-              Added
-            </span>
-          ) : (
-            !attaching && (
-              <Button
-                variant="secondary"
-                disabled={!stop}
-                onClick={() => setAttaching(true)}
-              >
-                Add
-              </Button>
-            )
-          )}
+              </div>
+            )}
+          </div>
+          <div className="flex-shrink-0 text-right text-sm text-mute">
+            <div className="font-mono">{activity.estDurationMinutes}min</div>
+            <div className="font-mono text-ink">{money(activity.estCost)}</div>
+          </div>
+          <div className="flex-shrink-0">
+            {alreadyAttached ? (
+              <span className="font-display text-xs uppercase tracking-board text-signal">
+                Added
+              </span>
+            ) : (
+              !attaching && (
+                <Button
+                  variant="secondary"
+                  disabled={!stop}
+                  onClick={() => setAttaching(true)}
+                >
+                  Add
+                </Button>
+              )
+            )}
+          </div>
         </div>
       </div>
       {attaching && stop && !alreadyAttached && (
-        <div className="px-1">
+        <div className="px-1 pl-[7.5rem]">
           <AttachForm
             stop={stop}
             activity={activity}
@@ -286,12 +297,13 @@ export function ActivitySearchPage() {
   }, [activities, maxDuration]);
 
   const heroImage = selectedStop?.city.imageUrl ?? trip?.stops[0]?.city.imageUrl ?? null;
+  const totalAttached = stops.reduce((n, s) => n + s.activities.length, 0);
 
   return (
     <div>
       <div className="relative flex h-[36vh] min-h-[240px] items-end overflow-hidden bg-ink text-platform">
-        {heroImage && <ZoomImage src={heroImage} from={1} to={1.2} />}
-        <div aria-hidden className="absolute inset-0 bg-ink/70" />
+        {heroImage && <ZoomImage src={heroImage} from={1.02} to={1.3} />}
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30" />
         <div className="relative z-10 mx-auto w-full max-w-4xl px-6 pb-8">
           <p className="font-mono text-xs uppercase tracking-board text-signal">Activities</p>
           <h1 className="mt-2 font-display text-3xl uppercase tracking-board sm:text-4xl">
@@ -437,6 +449,24 @@ export function ActivitySearchPage() {
                   reduce={reduce}
                 />
               ))}
+            </div>
+
+            <div className="mt-10 flex flex-wrap items-center gap-4 border-t border-rail pt-6">
+              <p className="font-mono text-xs uppercase tracking-board text-mute">
+                <span className="text-ink">{totalAttached}</span>{" "}
+                {totalAttached === 1 ? "activity" : "activities"} added
+              </p>
+              <div className="flex flex-1 flex-wrap justify-end gap-3">
+                <Link
+                  to={`/trips/${tripId}/cities`}
+                  className="rounded-sm border border-rail px-5 py-2.5 font-display text-sm font-semibold uppercase tracking-board text-ink transition-colors hover:border-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit"
+                >
+                  Back to cities
+                </Link>
+                <Link to={`/trips/${tripId}/budget`}>
+                  <Button>Next: review budget</Button>
+                </Link>
+              </div>
             </div>
           </>
         )}

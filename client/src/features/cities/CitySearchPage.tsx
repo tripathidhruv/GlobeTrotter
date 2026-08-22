@@ -3,8 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { useCities, useCreateStop, type City } from "./useCities";
 import { useTrip } from "../trips/useTrips";
-import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
+import { ZoomImage } from "../../components/ui/ZoomImage";
 
 // The catalog import (server/prisma/seed.ts) sticks to this set of regions —
 // keeping the filter options in sync with what actually appears in the data.
@@ -36,15 +36,24 @@ function clampDate(dateStr: string, maxStr: string): string {
   return dateStr > maxStr ? maxStr : dateStr;
 }
 
-function CityImage({ city }: { city: City }) {
+/** The trip's first stop city photo, if the API happened to include one. */
+function firstStopImage(trip: { stops: unknown[] } | undefined): string | null {
+  const stop = (trip?.stops as { city?: { imageUrl?: string | null } }[] | undefined)?.[0];
+  return stop?.city?.imageUrl ?? null;
+}
+
+function CityPhoto({ city }: { city: City }) {
   const [failed, setFailed] = useState(false);
-  if (!city.imageUrl || failed) return null;
+  if (!city.imageUrl || failed) {
+    return <div className="h-52 w-full bg-board" />;
+  }
   return (
     <img
       src={city.imageUrl}
       alt={city.name}
-      className="h-36 w-full object-cover"
+      loading="lazy"
       onError={() => setFailed(true)}
+      className="h-52 w-full object-cover opacity-80 transition-all duration-500 group-hover:scale-110 group-hover:opacity-100"
     />
   );
 }
@@ -151,25 +160,33 @@ function CityResultContent({
   }
 
   return (
-    <Card className="p-0">
-      <CityImage city={city} />
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="font-display text-lg uppercase tracking-board">{city.name}</h3>
-            <p className="text-sm text-mute">
-              {city.country}
-              {city.region ? ` · ${city.region}` : ""}
-            </p>
-            <div className="mt-2 flex gap-4 text-xs text-mute">
-              <span>
-                Cost index <span className="font-mono text-ink">{city.costIndex}</span>
-              </span>
-              <span>
-                Popularity <span className="font-mono text-ink">{city.popularityScore}</span>
-              </span>
-            </div>
+    <article className="group overflow-hidden rounded-sm border border-rail bg-ink text-platform transition-colors hover:border-signal">
+      <div className="relative overflow-hidden">
+        <CityPhoto city={city} />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink via-ink/30 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-4">
+          <h3 className="font-display text-xl uppercase tracking-board">{city.name}</h3>
+          <p className="mt-1 font-mono text-[11px] uppercase text-platform/70">
+            {city.country}
+            {city.region ? ` · ${city.region}` : ""}
+          </p>
+          <div className="mt-2 flex items-center gap-3 text-[11px] uppercase text-platform/60">
+            <span>
+              Cost index <span className="font-mono text-signal">{city.costIndex}</span>
+            </span>
+            <span aria-hidden className="h-3 w-px bg-platform/30" />
+            <span>
+              Popularity <span className="font-mono text-signal">{city.popularityScore}</span>
+            </span>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white p-4 text-ink">
+        <div className="flex items-center justify-between gap-4">
+          <p className="font-display text-xs uppercase tracking-board text-mute">
+            {added ? "On this trip" : "Add this stop"}
+          </p>
           {added ? (
             <span className="font-display text-sm uppercase tracking-board text-signal">Added</span>
           ) : (
@@ -192,7 +209,7 @@ function CityResultContent({
           />
         )}
       </div>
-    </Card>
+    </article>
   );
 }
 
@@ -266,17 +283,22 @@ export function CitySearchPage() {
 
   const nextOrderIndex = useMemo(() => trip?.stops.length ?? 0, [trip]);
 
+  // Prefer the trip's own first-stop photo; fall back to any catalogue city photo.
+  const heroImage = firstStopImage(trip) ?? cities?.find((c) => c.imageUrl)?.imageUrl ?? null;
+
   return (
     <div>
-      <div className="bg-ink px-6 py-10 text-platform">
-        <div className="mx-auto max-w-3xl">
-          <h1 className="font-display text-3xl uppercase tracking-board">Add a city</h1>
+      <div className="relative flex h-[38vh] min-h-[260px] items-end overflow-hidden bg-ink text-platform">
+        {heroImage && <ZoomImage src={heroImage} from={1.02} to={1.3} />}
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink via-ink/75 to-ink/25" />
+        <div className="relative z-10 mx-auto w-full max-w-5xl px-6 pb-8">
+          <p className="font-mono text-xs uppercase tracking-board text-signal">Add a city</p>
+          <h1 className="mt-2 font-display text-3xl uppercase tracking-board sm:text-5xl">
+            {trip ? trip.name : "Plan your route"}
+          </h1>
           {trip && (
-            <p className="mt-1 text-sm text-platform/60">
-              {trip.name} ·{" "}
-              <span className="font-mono">
-                {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
-              </span>
+            <p className="mt-2 font-mono text-sm text-platform/70">
+              {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
             </p>
           )}
           {trip && (
@@ -307,8 +329,8 @@ export function CitySearchPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-3xl px-6 py-10">
-        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mx-auto max-w-5xl px-6 py-10">
+        <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -343,7 +365,7 @@ export function CitySearchPage() {
           <p className="text-mute">No cities found. Try a different search or region.</p>
         )}
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {cities?.map((city, i) => (
             <CityResult
               key={city.id}
