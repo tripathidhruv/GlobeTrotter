@@ -96,13 +96,16 @@ function VideoLayer({
           : [0, 1, 1, 0];
 
   const opacity = useTransform(scrollYProgress, range, opacityValues);
+  // Dolly the footage forward as the page scrolls, so the city closes in.
+  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.28]);
 
   if (failed) {
     return null;
   }
 
   return (
-    <motion.div className="absolute inset-0" style={{ opacity }}>
+    <motion.div className="absolute inset-0 overflow-hidden" style={{ opacity }}>
+      <motion.div className="h-full w-full will-change-transform" style={{ scale: heroScale }}>
       <video
         className="h-full w-full object-cover [filter:saturate(1.15)_contrast(1.05)]"
         muted
@@ -118,6 +121,7 @@ function VideoLayer({
       >
         <source src={source.src} type="video/mp4" />
       </video>
+      </motion.div>
     </motion.div>
   );
 }

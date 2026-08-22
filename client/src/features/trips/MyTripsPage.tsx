@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useTrips, useDeleteTrip, type Trip } from "./useTrips";
 import { SceneryBand } from "../../components/ui/SceneryBand";
+import { ZoomImage } from "../../components/ui/ZoomImage";
 import { Button } from "../../components/ui/Button";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 
@@ -22,13 +23,15 @@ function TripCoverImage({ trip }: { trip: Trip }) {
     return <div className="h-48 w-full bg-board" />;
   }
   return (
-    <img
-      src={src}
-      alt=""
-      loading="lazy"
-      onError={() => setFailed(true)}
-      className="h-48 w-full object-cover opacity-75 transition-all duration-500 group-hover:scale-105 group-hover:opacity-100"
-    />
+    <div className="relative h-48 w-full overflow-hidden">
+      <img
+        src={src}
+        alt=""
+        loading="lazy"
+        onError={() => setFailed(true)}
+        className="h-48 w-full object-cover opacity-75 transition-all duration-500 group-hover:scale-110 group-hover:opacity-100"
+      />
+    </div>
   );
 }
 
@@ -160,13 +163,7 @@ export function MyTripsPage() {
   return (
     <div>
       <section className="relative isolate overflow-hidden bg-ink text-platform">
-        {heroImage && (
-          <img
-            src={heroImage}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover opacity-45"
-          />
-        )}
+        {heroImage && <ZoomImage src={heroImage} className="opacity-45" from={1.25} to={1} />}
         <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/80 to-ink/40" />
 
         <div className="relative mx-auto max-w-6xl px-6 py-20">

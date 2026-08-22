@@ -10,6 +10,7 @@ import { Ticker } from "../../components/ui/Ticker";
 import { SceneryBand } from "../../components/ui/SceneryBand";
 import { CityDialog } from "../../components/ui/CityDialog";
 import { FeatureReel, type ReelItem } from "../../components/ui/FeatureReel";
+import { ZoomImage } from "../../components/ui/ZoomImage";
 
 const HERO_CLIPS = [
   { src: "/video/paris.mp4", label: "Paris" },
@@ -98,12 +99,15 @@ function CityCardContent({ city, onOpen }: { city: City; onOpen: () => void }) {
       className="group relative cursor-pointer overflow-hidden rounded-sm border border-rail bg-ink"
     >
       {city.imageUrl ? (
-        <img
-          src={city.imageUrl}
-          alt=""
-          loading="lazy"
-          className="h-52 w-full object-cover opacity-70 transition-all duration-500 group-hover:scale-105 group-hover:opacity-90"
-        />
+        <div className="relative h-52 w-full overflow-hidden">
+          <ZoomImage
+            src={city.imageUrl}
+            className="opacity-70 transition-opacity duration-500 group-hover:opacity-95"
+            from={1.3}
+            to={1.02}
+            drift={4}
+          />
+        </div>
       ) : (
         <div className="h-52 w-full bg-board" />
       )}

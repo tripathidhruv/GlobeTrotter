@@ -23,8 +23,11 @@ export function SceneryBand({
     offset: ["start end", "end start"],
   });
 
-  // Drift the image opposite the scroll direction for depth.
+  // Drift the image opposite the scroll direction for depth, and push it
+  // through the frame: the buildings swell as the band enters view and pull
+  // back as it leaves, so scrolling reads as moving toward the city.
   const y = useTransform(scrollYProgress, [0, 1], ["-12%", "12%"]);
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1.35, 1.08, 1.35]);
   const scrimOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.85, 0.55, 0.85]);
 
   return (
@@ -39,8 +42,8 @@ export function SceneryBand({
           <motion.img
             src={imageUrl}
             alt=""
-            style={{ y }}
-            className="absolute inset-0 h-[124%] w-full object-cover"
+            style={{ y, scale }}
+            className="absolute inset-0 h-[124%] w-full origin-center object-cover will-change-transform"
           />
         ))}
 
