@@ -52,9 +52,15 @@ describe("GET /api/trips/:id/budget", () => {
       .get(`/api/trips/${tripId}/budget`)
       .set("x-test-user-id", "test-user-1");
     expect(res.status).toBe(200);
-    expect(res.body.totalCost).toBe(50);
+    // Rome defaults to costIndex 50 (ratio 1), 2-night stop: accommodation
+    // 2*90=180 (estimated) + food 20 (logged "meal" expense overrides the
+    // 2*45=90 estimate) + localTransport 2*15=30 (estimated) + interCityTravel
+    // 0 (single stop) + activity 30 (exact).
     expect(res.body.byCategory.activity).toBe(30);
-    expect(res.body.byCategory.meal).toBe(20);
+    expect(res.body.byCategory.food).toBe(20);
+    expect(res.body.byCategory.accommodation).toBe(180);
+    expect(res.body.byCategory.localTransport).toBe(30);
+    expect(res.body.totalCost).toBe(180 + 20 + 30 + 0 + 30);
   });
 
   it("allows a collaborator to view the budget", async () => {

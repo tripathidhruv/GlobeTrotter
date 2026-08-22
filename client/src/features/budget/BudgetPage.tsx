@@ -65,10 +65,18 @@ function CountUpCurrency({
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
+  accommodation: "Accommodation",
+  food: "Food",
+  activity: "Activities",
+  localTransport: "Local transport",
+  interCityTravel: "Inter-city travel",
+  other: "Other",
+  // Legacy/raw expense category spellings, kept for compatibility.
   transport: "Transport",
   stay: "Stay",
   activities: "Activities",
   meals: "Meals",
+  meal: "Food",
 };
 
 function categoryLabel(key: string) {
@@ -89,9 +97,10 @@ export function BudgetPage() {
 
   const categoryData = useMemo(() => {
     if (!budget) return [];
+    const estimatedKeys = new Set(budget.estimatedCategories ?? []);
     return Object.entries(budget.byCategory)
       .filter(([, v]) => v > 0)
-      .map(([key, value]) => ({ name: categoryLabel(key), value }));
+      .map(([key, value]) => ({ name: categoryLabel(key), value, estimated: estimatedKeys.has(key) }));
   }, [budget]);
 
   const dayData = useMemo(() => {
@@ -251,6 +260,11 @@ export function BudgetPage() {
                             style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                           />
                           {entry.name}
+                          {entry.estimated && (
+                            <span className="font-mono text-[10px] uppercase tracking-board text-mute">
+                              est.
+                            </span>
+                          )}
                         </span>
                         <span>{currency.format(entry.value)}</span>
                       </li>
@@ -332,6 +346,92 @@ export function BudgetPage() {
                 </div>
               )}
             </RevealSection>
+
+            {/* Per-stop breakdown */}
+            {budget.perStop && budget.perStop.length > 0 && (
+              <RevealSection reduce={reduce}>
+                <h2 className="mt-12 mb-2 font-display text-lg uppercase tracking-board text-ink">
+                  By stop
+                </h2>
+                <div>
+                  {budget.perStop.map((stop) => {
+                    const stopTotal = stop.accommodation + stop.food + stop.localTransport + stop.activities;
+                    return (
+                      <div key={stop.stopId} className="border-t border-rail py-3">
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="font-mono text-sm text-ink">
+                            {stop.cityName}{" "}
+                            <span className="text-mute">
+                              · {stop.nights} night{stop.nights === 1 ? "" : "s"} · cost index{" "}
+                              {stop.costIndex}
+                            </span>
+                          </span>
+                          <span className="font-mono text-sm font-bold text-ink">
+                            {currency.format(stopTotal)}
+                          </span>
+                        </div>
+                        <p className="mt-1 font-mono text-xs text-mute">
+                          Accommodation {currency.format(stop.accommodation)} (est.) · Food{" "}
+                          {currency.format(stop.food)} (est.) · Local transport{" "}
+                          {currency.format(stop.localTransport)} (est.) · Activities{" "}
+                          {currency.format(stop.activities)}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </RevealSection>
+            )}
+
+            {/* Transparency note: how the estimate is calculated */}
+            {budget.assumptions && (
+              <RevealSection reduce={reduce}>
+                <div className="mt-12 border border-rail bg-platform p-4">
+                  <h2 className="font-display text-sm uppercase tracking-board text-ink">
+                    How this is calculated
+                  </h2>
+                  <p className="mt-2 font-mono text-xs text-mute">
+                    Accommodation, food, local transport, and inter-city travel are{" "}
+                    <span className="text-signal">ESTIMATES</span>, not confirmed bookings.
+                    Activity costs are exact, taken from activities you've added to this trip.
+                    Any expense you log yourself replaces the matching estimate.
+                  </p>
+                  <ul className="mt-3 space-y-1 font-mono text-xs text-mute">
+                    <li>
+                      Baseline rates assume a cost index of{" "}
+                      <span className="text-ink">{budget.assumptions.referenceCostIndex}</span> and
+                      scale up or down with each city's own cost index.
+                    </li>
+                    <li>
+                      Accommodation:{" "}
+                      <span className="text-ink">
+                        {currency.format(budget.assumptions.accommodationPerNight)}
+                      </span>{" "}
+                      / night
+                    </li>
+                    <li>
+                      Food:{" "}
+                      <span className="text-ink">{currency.format(budget.assumptions.foodPerDay)}</span> /
+                      day
+                    </li>
+                    <li>
+                      Local transport:{" "}
+                      <span className="text-ink">
+                        {currency.format(budget.assumptions.localTransportPerDay)}
+                      </span>{" "}
+                      / day
+                    </li>
+                    <li>
+                      Inter-city travel:{" "}
+                      <span className="text-ink">
+                        {currency.format(budget.assumptions.interCityHop)}
+                      </span>{" "}
+                      / hop between stops
+                    </li>
+                  </ul>
+                </div>
+              </RevealSection>
+            )}
           </>
         )}
       </div>

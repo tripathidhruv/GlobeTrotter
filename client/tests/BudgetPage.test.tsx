@@ -55,16 +55,40 @@ const trip = {
 const budget = {
   totalCost: 4500,
   byCategory: {
-    transport: 1000,
-    stay: 2000,
-    activities: 1000,
-    meals: 500,
+    localTransport: 1000,
+    accommodation: 2000,
+    activity: 1000,
+    food: 500,
   },
   byDay: {
     "2026-09-01": 300,
     "2026-09-02": 300,
     "2026-09-03": 1200,
     "2026-09-04": 300,
+  },
+  perStop: [
+    {
+      stopId: "s1",
+      cityId: "c1",
+      cityName: "Tokyo",
+      costIndex: 70,
+      nights: 4,
+      accommodation: 2000,
+      food: 500,
+      localTransport: 1000,
+      activities: 900,
+    },
+  ],
+  totalNights: 4,
+  averagePerDay: 525,
+  estimatedCategories: ["accommodation", "food", "localTransport", "interCityTravel"],
+  assumptions: {
+    referenceCostIndex: 50,
+    accommodationPerNight: 90,
+    foodPerDay: 45,
+    localTransportPerDay: 15,
+    interCityHop: 120,
+    note: "estimates",
   },
 };
 
@@ -119,10 +143,23 @@ describe("BudgetPage", () => {
 
   it("renders category breakdown labels", () => {
     renderBudgetPage();
-    expect(screen.getByText("Transport")).toBeInTheDocument();
-    expect(screen.getByText("Stay")).toBeInTheDocument();
+    expect(screen.getByText("Local transport")).toBeInTheDocument();
+    expect(screen.getByText("Accommodation")).toBeInTheDocument();
     expect(screen.getByText("Activities")).toBeInTheDocument();
-    expect(screen.getByText("Meals")).toBeInTheDocument();
+    expect(screen.getByText("Food")).toBeInTheDocument();
+  });
+
+  it("marks estimated categories and shows the per-stop breakdown", () => {
+    renderBudgetPage();
+    expect(screen.getAllByText("est.").length).toBeGreaterThan(0);
+    expect(screen.getByText(/Tokyo/)).toBeInTheDocument();
+    expect(screen.getByText(/4 nights/)).toBeInTheDocument();
+  });
+
+  it("shows the how-this-is-calculated transparency note", () => {
+    renderBudgetPage();
+    expect(screen.getByText("How this is calculated")).toBeInTheDocument();
+    expect(screen.getByText(/ESTIMATES/)).toBeInTheDocument();
   });
 
   it("renders an honest loading state", () => {
