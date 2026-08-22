@@ -13,3 +13,5 @@ Task 8: complete (commit 1e757b0, review clean, no fix round — Tailwind v4 @co
     - RouteLine.tsx node transition not gated on prefers-reduced-motion (framer-motion RAF tween still plays ~350ms; line-draw itself IS correctly gated)
     - client/src/index.css now dead/unimported (Vite scaffold leftover)
     - Button.tsx uses {...(props as any)} — type-safety gap, inherited from plan's reference code
+Task 9: complete (commits b30f81d, 1a95ea5, review clean after 1 small fix — focus-ring token consistency)
+  Minor deferred to final review: ProtectedRoute checks session once on mount, no onAuthStateChange subscription (per brief; revisit if stale-session bugs appear)
