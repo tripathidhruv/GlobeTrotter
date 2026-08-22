@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useTrips, useDeleteTrip, type Trip } from "./useTrips";
-import { Card } from "../../components/ui/Card";
+import { SceneryBand } from "../../components/ui/SceneryBand";
 import { Button } from "../../components/ui/Button";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 
@@ -10,15 +10,24 @@ function formatDate(iso: string) {
   return iso.slice(0, 10);
 }
 
+/** Trip's own cover if set, otherwise the photo of its first stop's city. */
+function tripImage(trip: Trip): string | null {
+  return trip.coverPhotoUrl ?? trip.stops?.[0]?.city?.imageUrl ?? null;
+}
+
 function TripCoverImage({ trip }: { trip: Trip }) {
   const [failed, setFailed] = useState(false);
-  if (!trip.coverPhotoUrl || failed) return null;
+  const src = tripImage(trip);
+  if (!src || failed) {
+    return <div className="h-48 w-full bg-board" />;
+  }
   return (
     <img
-      src={trip.coverPhotoUrl}
-      alt={trip.name}
-      className="h-36 w-full object-cover"
+      src={src}
+      alt=""
+      loading="lazy"
       onError={() => setFailed(true)}
+      className="h-48 w-full object-cover opacity-75 transition-all duration-500 group-hover:scale-105 group-hover:opacity-100"
     />
   );
 }
@@ -30,41 +39,54 @@ function TripCardContent({
   trip: Trip;
   onRequestDelete: (id: string, trigger: HTMLElement) => void;
 }) {
+  const first = trip.stops?.[0]?.city;
   return (
-    <Card className="p-0">
-      <TripCoverImage trip={trip} />
+    <article className="group overflow-hidden rounded-sm border border-rail bg-ink text-platform transition-colors hover:border-signal">
+      <div className="relative overflow-hidden">
+        <TripCoverImage trip={trip} />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/30 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-4">
+          <h2 className="font-display text-2xl uppercase leading-none tracking-board">
+            {trip.name}
+          </h2>
+          {first && (
+            <p className="mt-1 font-mono text-[10px] uppercase text-platform/60">
+              via {first.name}, {first.country}
+            </p>
+          )}
+        </div>
+        <span className="absolute right-3 top-3 rounded-sm border border-platform/40 bg-ink/70 px-2 py-1 font-mono text-[10px] text-signal">
+          {String(trip._count?.stops ?? 0).padStart(2, "0")} STOPS
+        </span>
+      </div>
+
       <div className="p-5">
-        <h2 className="font-display text-lg uppercase tracking-board">{trip.name}</h2>
-        <p className="mt-1 font-mono text-xs text-mute">
-          {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
-        </p>
-        <p className="mt-1 text-sm text-mute">
-          <span className="font-mono text-signal">{trip._count?.stops ?? 0}</span>{" "}
-          {trip._count?.stops === 1 ? "destination" : "destinations"}
+        <p className="font-mono text-xs text-platform/70">
+          {formatDate(trip.startDate)} — {formatDate(trip.endDate)}
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
           <Link
             to={`/trips/${trip.id}`}
-            className="font-display uppercase tracking-board text-transit hover:underline"
+            className="font-display uppercase tracking-board text-platform transition-colors hover:text-signal"
           >
             View
           </Link>
           <Link
             to={`/trips/${trip.id}/build`}
-            className="font-display uppercase tracking-board text-ink hover:underline"
+            className="font-display uppercase tracking-board text-platform/70 transition-colors hover:text-platform"
           >
             Edit
           </Link>
           <button
             type="button"
             onClick={(e) => onRequestDelete(trip.id, e.currentTarget)}
-            className="font-display uppercase tracking-board text-signal hover:underline"
+            className="font-display uppercase tracking-board text-signal transition-colors hover:text-platform"
           >
             Delete
           </button>
         </div>
       </div>
-    </Card>
+    </article>
   );
 }
 
@@ -102,6 +124,21 @@ export function MyTripsPage() {
   const reduce = useReducedMotion() ?? false;
 
   const pendingTrip = trips?.find((t) => t.id === pendingDeleteId);
+  const tripCount = trips?.length ?? 0;
+  const stopTotal = trips?.reduce((n, t) => n + (t._count?.stops ?? 0), 0) ?? 0;
+  const nightTotal =
+    trips?.reduce(
+      (n, t) =>
+        n +
+        Math.max(
+          0,
+          Math.round(
+            (new Date(t.endDate).getTime() - new Date(t.startDate).getTime()) / 86_400_000
+          )
+        ),
+      0
+    ) ?? 0;
+  const heroImage = trips?.map(tripImage).find((src): src is string => !!src) ?? null;
 
   function requestDelete(id: string, trigger: HTMLElement) {
     // The trigger receives focus explicitly so ConfirmDialog can restore focus to it on close,
@@ -122,16 +159,40 @@ export function MyTripsPage() {
 
   return (
     <div>
-      <div className="bg-ink px-6 py-10 text-platform">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <h1 className="font-display text-3xl uppercase tracking-board">My Trips</h1>
-          <Link to="/trips/new">
-            <Button>Plan New Trip</Button>
-          </Link>
-        </div>
-      </div>
+      <section className="relative isolate overflow-hidden bg-ink text-platform">
+        {heroImage && (
+          <img
+            src={heroImage}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover opacity-45"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/80 to-ink/40" />
 
-      <div className="mx-auto max-w-5xl px-6 py-10">
+        <div className="relative mx-auto max-w-6xl px-6 py-20">
+          <p className="font-mono text-xs uppercase tracking-board text-signal">
+            {tripCount > 0 ? `${String(tripCount).padStart(2, "0")} services scheduled` : "No services"}
+          </p>
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-6">
+            <h1 className="font-display text-5xl uppercase leading-none tracking-board sm:text-7xl">
+              My Trips
+            </h1>
+            <Link to="/trips/new">
+              <Button>Plan New Trip</Button>
+            </Link>
+          </div>
+          <div className="mt-8 flex flex-wrap gap-x-10 gap-y-3 border-t border-platform/20 pt-5 font-mono text-xs uppercase text-platform/60">
+            <span>
+              Stops <span className="text-signal">{String(stopTotal).padStart(2, "0")}</span>
+            </span>
+            <span>
+              Nights <span className="text-signal">{String(nightTotal).padStart(3, "0")}</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-6xl px-6 py-14">
         {isLoading && <p className="text-mute">Loading...</p>}
         {isError && (
           <p className="text-mute">Couldn't load your trips right now. Please try again shortly.</p>
@@ -146,7 +207,7 @@ export function MyTripsPage() {
           </p>
         )}
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {trips?.map((trip, i) => (
             <TripCard
               key={trip.id}
@@ -158,6 +219,13 @@ export function MyTripsPage() {
           ))}
         </div>
       </div>
+
+      <SceneryBand
+        imageUrl={trips?.slice(1).map(tripImage).find((src): src is string => !!src) ?? heroImage}
+        eyebrow="Next departure"
+        title="Where to next?"
+        caption="Add a city, set the dates, and the board updates itself."
+      />
 
       <ConfirmDialog
         open={!!pendingTrip}

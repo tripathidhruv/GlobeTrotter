@@ -10,6 +10,8 @@ export interface Trip {
   endDate: string;
   ownerId: string;
   _count?: { stops: number };
+  /** First stop only, used for the card image on list views. */
+  stops?: { city: { name: string; country: string; imageUrl?: string | null } }[];
 }
 
 export function useTrips() {

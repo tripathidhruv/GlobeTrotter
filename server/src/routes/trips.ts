@@ -18,7 +18,15 @@ router.get("/", verifySupabaseJwt, async (req: AuthedRequest, res) => {
     where: {
       OR: [{ ownerId: req.userId! }, { collaborators: { some: { userId: req.userId! } } }],
     },
-    include: { _count: { select: { stops: true } } },
+    include: {
+      _count: { select: { stops: true } },
+      // First stop only — the list view uses its city photo as the card image.
+      stops: {
+        orderBy: { orderIndex: "asc" },
+        take: 1,
+        include: { city: { select: { name: true, country: true, imageUrl: true } } },
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
   res.json(trips);

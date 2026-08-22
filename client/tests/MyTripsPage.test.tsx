@@ -49,7 +49,8 @@ describe("MyTripsPage", () => {
     } as any);
     renderPage();
     expect(screen.getByText("Japan Trip")).toBeInTheDocument();
-    const count = screen.getByText("3");
+    // The stop count now renders zero-padded on the card's image badge.
+    const count = screen.getByText("03 STOPS");
     expect(count.className).toContain("font-mono");
   });
 
@@ -70,8 +71,8 @@ describe("MyTripsPage", () => {
       isError: false,
     } as any);
     renderPage();
-    const img = screen.getByRole("img", { name: /japan trip/i });
-    expect(img).toHaveAttribute("src", "https://example.com/photo.jpg");
+    const img = document.querySelector('img[src="https://example.com/photo.jpg"]');
+    expect(img).not.toBeNull();
   });
 
   it("renders no image frame when coverPhotoUrl is null", () => {
@@ -91,7 +92,7 @@ describe("MyTripsPage", () => {
       isError: false,
     } as any);
     renderPage();
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(document.querySelector("img")).toBeNull();
   });
 
   it("renders an honest empty state with no trips", () => {
@@ -251,8 +252,13 @@ describe("MyTripsPage", () => {
     } as any);
     renderPage();
 
-    const img = screen.getByRole("img", { name: /japan trip/i });
-    fireEvent.error(img);
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    // The same photo also backs the page hero, so scope to the card image.
+    const cardImg = document.querySelector(
+      'img[src="https://example.com/broken.jpg"].h-48'
+    ) as HTMLImageElement;
+    expect(cardImg).not.toBeNull();
+    fireEvent.error(cardImg);
+    // The broken photo is swapped for a plain block so the card keeps its shape.
+    expect(document.querySelector('img[src="https://example.com/broken.jpg"].h-48')).toBeNull();
   });
 });
