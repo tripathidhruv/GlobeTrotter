@@ -2,9 +2,18 @@ import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreateTrip } from "./useTrips";
 import { Button } from "../../components/ui/Button";
+import { FeatureReel, type ReelItem } from "../../components/ui/FeatureReel";
+import { useCities } from "../cities/useCities";
+
+const INSPIRATION_CLIPS = [
+  { src: "/video/rome.mp4", label: "Rome" },
+  { src: "/video/tokyo.mp4", label: "Tokyo" },
+  { src: "/video/barcelona.mp4", label: "Barcelona" },
+  { src: "/video/lisbon.mp4", label: "Lisbon" },
+];
 
 const inputClass =
-  "w-full rounded-sm border border-rail bg-white px-3 py-2 text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit";
+  "w-full rounded-sm border border-platform/25 bg-ink px-3 py-2.5 text-platform outline-none transition-colors placeholder:text-platform/30 focus:border-signal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal [color-scheme:dark]";
 
 interface FieldErrors {
   name?: string;
@@ -31,6 +40,7 @@ export function CreateTripPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { mutateAsync, isPending } = useCreateTrip();
   const navigate = useNavigate();
+  const { data: cities } = useCities();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -66,21 +76,31 @@ export function CreateTripPage() {
     }
   }
 
+  const reelItems: ReelItem[] = INSPIRATION_CLIPS.map((clip) => {
+    const city = cities?.find((c) => c.name === clip.label);
+    return {
+      src: clip.src,
+      label: clip.label,
+      meta: city ? `${city.country} · COST ${city.costIndex}` : undefined,
+      poster: city?.imageUrl ?? undefined,
+    };
+  });
+
   return (
-    <div>
-      <div className="bg-ink px-6 py-10 text-platform">
-        <div className="mx-auto max-w-xl">
-          <h1 className="font-display text-3xl uppercase tracking-board">Plan a new trip</h1>
-          <p className="mt-1 text-sm text-platform/60">
+    <div className="min-h-screen bg-ink text-platform">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 py-16 lg:grid-cols-[1fr_0.8fr] lg:gap-16 lg:py-24">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-board text-signal">New service</p>
+          <h1 className="mt-3 font-display text-5xl uppercase leading-none tracking-board sm:text-6xl">
+            Plan a new trip
+          </h1>
+          <p className="mt-4 max-w-md text-platform/60">
             Set the basics — you can add stops and activities next.
           </p>
-        </div>
-      </div>
 
-      <div className="mx-auto max-w-xl px-6 py-10">
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="mt-10 space-y-5">
           <div>
-            <label htmlFor="name" className="mb-1 block font-display text-xs uppercase tracking-board text-mute">
+            <label htmlFor="name" className="mb-1.5 block font-display text-xs uppercase tracking-board text-platform/50">
               Trip name
             </label>
             <input
@@ -99,7 +119,7 @@ export function CreateTripPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="start" className="mb-1 block font-display text-xs uppercase tracking-board text-mute">
+              <label htmlFor="start" className="mb-1.5 block font-display text-xs uppercase tracking-board text-platform/50">
                 Start date
               </label>
               <input
@@ -111,7 +131,7 @@ export function CreateTripPage() {
               />
             </div>
             <div>
-              <label htmlFor="end" className="mb-1 block font-display text-xs uppercase tracking-board text-mute">
+              <label htmlFor="end" className="mb-1.5 block font-display text-xs uppercase tracking-board text-platform/50">
                 End date
               </label>
               <input
@@ -131,7 +151,7 @@ export function CreateTripPage() {
             </div>
           </div>
           <div>
-            <label htmlFor="description" className="mb-1 block font-display text-xs uppercase tracking-board text-mute">
+            <label htmlFor="description" className="mb-1.5 block font-display text-xs uppercase tracking-board text-platform/50">
               Description
             </label>
             <textarea
@@ -142,7 +162,7 @@ export function CreateTripPage() {
             />
           </div>
           <div>
-            <label htmlFor="coverPhotoUrl" className="mb-1 block font-display text-xs uppercase tracking-board text-mute">
+            <label htmlFor="coverPhotoUrl" className="mb-1.5 block font-display text-xs uppercase tracking-board text-platform/50">
               Cover photo URL
             </label>
             <input
@@ -171,7 +191,17 @@ export function CreateTripPage() {
           <Button type="submit" disabled={isPending}>
             Save trip
           </Button>
-        </form>
+          </form>
+        </div>
+
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <FeatureReel items={reelItems} />
+          <p className="mt-4 font-mono text-[11px] uppercase text-platform/40">
+            {(cities?.length ?? 0) > 0
+              ? `${cities?.length} destinations in the catalogue`
+              : "Loading destinations…"}
+          </p>
+        </div>
       </div>
     </div>
   );

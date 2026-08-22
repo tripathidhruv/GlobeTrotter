@@ -8,6 +8,11 @@ vi.mock("../src/features/trips/useTrips", () => ({
   useCreateTrip: () => ({ mutateAsync }),
 }));
 
+// The page shows an inspiration reel driven by the city catalogue.
+vi.mock("../src/features/cities/useCities", () => ({
+  useCities: () => ({ data: [], isLoading: false, isError: false }),
+}));
+
 describe("CreateTripPage", () => {
   beforeEach(() => {
     mutateAsync.mockClear();
