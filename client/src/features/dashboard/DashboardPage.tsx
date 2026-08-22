@@ -17,6 +17,12 @@ function formatDate(iso: string) {
   return iso.slice(0, 10);
 }
 
+const money = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0,
+});
+
 function nights(start: string, end: string) {
   const ms = new Date(end).getTime() - new Date(start).getTime();
   return Math.max(0, Math.round(ms / 86_400_000));
@@ -209,7 +215,7 @@ export function DashboardPage() {
         )}
         {!tripsLoading && !tripsError && tripCount === 0 && (
           <div className="py-12">
-            <p className="text-mute">No departures scheduled yet.</p>
+            <p className="text-mute">No trips yet. Plan your first one to see it here.</p>
             <Link
               to="/trips/new"
               className="mt-3 inline-block font-display text-sm uppercase tracking-board text-transit hover:text-ink"
@@ -258,7 +264,9 @@ export function DashboardPage() {
         <div className="flex items-end justify-between border-b-2 border-ink pb-3">
           <h2 className="font-display text-2xl uppercase tracking-board">Budget highlight</h2>
           {nearest && (
-            <span className="font-mono text-xs uppercase text-mute">{nearest.name}</span>
+            <span className="font-mono text-xs uppercase text-mute">
+              {formatDate(nearest.startDate)} — {formatDate(nearest.endDate)}
+            </span>
           )}
         </div>
 
@@ -277,7 +285,7 @@ export function DashboardPage() {
             <div className="bg-platform p-6">
               <p className="font-mono text-[11px] uppercase tracking-board text-mute">Total</p>
               <p className="mt-1 font-mono text-3xl tabular-nums text-ink">
-                {Math.round(budget.totalCost)}
+                {money.format(budget.totalCost)}
               </p>
             </div>
             {Object.entries(budget.byCategory)
@@ -288,7 +296,7 @@ export function DashboardPage() {
                     {category}
                   </p>
                   <p className="mt-1 font-mono text-3xl tabular-nums text-signal">
-                    {Math.round(amount)}
+                    {money.format(amount)}
                   </p>
                 </div>
               ))}
