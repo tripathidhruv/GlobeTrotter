@@ -41,4 +41,50 @@ router.post("/", verifySupabaseJwt, async (req: AuthedRequest, res) => {
   res.status(201).json(trip);
 });
 
+router.get("/:id", verifySupabaseJwt, async (req: AuthedRequest, res) => {
+  const trip = await db.trip.findUnique({
+    where: { id: String(req.params.id) },
+    include: {
+      stops: {
+        include: { city: true, activities: { include: { activity: true } } },
+        orderBy: { orderIndex: "asc" },
+      },
+      collaborators: true,
+    },
+  });
+  if (!trip) return res.status(404).json({ error: "not found" });
+  res.json(trip);
+});
+
+router.patch("/:id", verifySupabaseJwt, async (req: AuthedRequest, res) => {
+  const trip = await db.trip.update({ where: { id: String(req.params.id) }, data: req.body });
+  res.json(trip);
+});
+
+router.delete("/:id", verifySupabaseJwt, async (req: AuthedRequest, res) => {
+  await db.trip.delete({ where: { id: String(req.params.id) } });
+  res.status(204).end();
+});
+
+router.post("/:id/stops", verifySupabaseJwt, async (req: AuthedRequest, res) => {
+  const schema = z.object({
+    cityId: z.string(),
+    orderIndex: z.number(),
+    arrivalDate: z.string(),
+    departureDate: z.string(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const stop = await db.stop.create({
+    data: {
+      tripId: String(req.params.id),
+      cityId: parsed.data.cityId,
+      orderIndex: parsed.data.orderIndex,
+      arrivalDate: new Date(parsed.data.arrivalDate),
+      departureDate: new Date(parsed.data.departureDate),
+    },
+  });
+  res.status(201).json(stop);
+});
+
 export default router;
