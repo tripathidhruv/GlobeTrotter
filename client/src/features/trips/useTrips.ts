@@ -4,8 +4,8 @@ import { apiFetch } from "../../lib/apiClient";
 export interface Trip {
   id: string;
   name: string;
-  description?: string;
-  coverPhotoUrl?: string;
+  description?: string | null;
+  coverPhotoUrl?: string | null;
   startDate: string;
   endDate: string;
   ownerId: string;
