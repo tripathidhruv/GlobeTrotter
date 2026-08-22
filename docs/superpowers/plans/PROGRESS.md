@@ -5,15 +5,15 @@ Spec: `docs/superpowers/specs/2026-08-22-globetrotter-design.md`
 
 Update this file's checkbox + "Last completed" line after EVERY task finishes (commit lands). If switching Claude accounts/sessions mid-build: open this file first, tell the new session "resume GlobeTrotter build, see docs/superpowers/plans/PROGRESS.md", it picks up at "Next task".
 
-**Last completed:** Task 3 — Express app skeleton + Vercel serverless entry (commit 6a7c872)
-**Next task:** Task 4 — Auth middleware + trips list/create endpoints
+**Last completed:** Task 4 — Auth middleware + trips list/create endpoints (commits 3a2acc5, 57e7b77)
+**Next task:** Task 5 — Trip detail/update/delete + Stop CRUD endpoints
 
 ## Tasks
 
 - [x] 1. Monorepo scaffold
 - [x] 2. Prisma schema + seed data
 - [x] 3. Express app skeleton + Vercel serverless entry
-- [ ] 4. Auth middleware + trips list/create endpoints
+- [x] 4. Auth middleware + trips list/create endpoints
 - [ ] 5. Trip detail/update/delete + Stop CRUD endpoints
 - [ ] 6. Cities + Activities search endpoints
 - [ ] 7. StopActivity attach/detach + budget service + budget endpoint
@@ -47,3 +47,7 @@ Update this file's checkbox + "Last completed" line after EVERY task finishes (c
 - `server/package.json`'s `"prisma": { "seed": ... }` block is dead — Prisma v7 actually reads the seed command from `server/prisma.config.ts`'s `migrations.seed` field instead.
 - `server/src/db.ts` uses the Prisma v7 driver-adapter pattern (`@prisma/adapter-pg`, `PrismaClient({ adapter })`), NOT a bare `new PrismaClient()` — every later task's routes import `db` from here as-is, no changes needed downstream.
 - Root `vercel.ts` imports a type from `@vercel/config/v1`, a package not yet installed anywhere. Currently inert (nothing type-checks that file). Task 25 (Vercel deployment) must either install `@vercel/config` or confirm Vercel's build step tolerates it.
+- **All new `server/src/**` files need `.js` extensions on relative imports** (e.g. `from "../db.js"`, not `from "../db"`) and `import type { ... }` for type-only imports (Request/Response/NextFunction, etc.) — required by `moduleResolution: nodenext` + `verbatimModuleSyntax: true`. `server/src/db.ts` (Task 3) already does this correctly; Task 4 initially didn't, which broke the build (`tsc` produced zero output) — now fixed for all existing files, but every future route/middleware file must follow this pattern from the start.
+- `server/tsconfig.json` now has `outDir: "./dist"` enabled (was commented out) and `.gitignore` covers `/dist`.
+- `npm run dev --workspace server` now uses `tsx watch src/index.ts` (not `ts-node-dev`, which is CJS-only and incompatible with this project's `"type": "module"`).
+- `server/src/index.ts` loads `dotenv/config` at the top so `SUPABASE_URL`/`SUPABASE_SERVICE_KEY`/`DATABASE_URL` are populated at runtime, not just in tests (`server/vitest.setup.ts` handles the test-time equivalent, added in this task).
