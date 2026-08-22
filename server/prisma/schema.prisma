@@ -11,3 +11,130 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Role {
+  user
+  admin
+}
+
+enum CollaboratorRole {
+  editor
+  viewer
+}
+
+enum ExpenseCategory {
+  transport
+  stay
+  activity
+  meal
+  other
+}
+
+model User {
+  id             String             @id @default(uuid())
+  email          String             @unique
+  name           String?
+  avatarUrl      String?
+  role           Role               @default(user)
+  languagePref   String             @default("en")
+  createdAt      DateTime           @default(now())
+  trips          Trip[]
+  collaborations TripCollaborator[]
+}
+
+model Trip {
+  id            String             @id @default(uuid())
+  ownerId       String
+  owner         User               @relation(fields: [ownerId], references: [id])
+  name          String
+  description   String?
+  coverPhotoUrl String?
+  startDate     DateTime
+  endDate       DateTime
+  isPublic      Boolean            @default(false)
+  shareSlug     String?            @unique
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  stops         Stop[]
+  expenses      Expense[]
+  collaborators TripCollaborator[]
+  shares        TripShare[]
+}
+
+model TripCollaborator {
+  id        String           @id @default(uuid())
+  tripId    String
+  trip      Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  role      CollaboratorRole @default(editor)
+  invitedAt DateTime         @default(now())
+
+  @@unique([tripId, userId])
+}
+
+model City {
+  id              String     @id @default(uuid())
+  name            String
+  country         String
+  region          String?
+  costIndex       Int        @default(50)
+  popularityScore Int        @default(0)
+  imageUrl        String?
+  stops           Stop[]
+  activities      Activity[]
+}
+
+model Stop {
+  id            String         @id @default(uuid())
+  tripId        String
+  trip          Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  cityId        String
+  city          City           @relation(fields: [cityId], references: [id])
+  orderIndex    Int
+  arrivalDate   DateTime
+  departureDate DateTime
+  activities    StopActivity[]
+}
+
+model Activity {
+  id                 String         @id @default(uuid())
+  cityId             String
+  city               City           @relation(fields: [cityId], references: [id])
+  name               String
+  category           String
+  description        String?
+  imageUrl           String?
+  estCost            Float          @default(0)
+  estDurationMinutes Int            @default(60)
+  stopActivities     StopActivity[]
+}
+
+model StopActivity {
+  id            String   @id @default(uuid())
+  stopId        String
+  stop          Stop     @relation(fields: [stopId], references: [id], onDelete: Cascade)
+  activityId    String
+  activity      Activity @relation(fields: [activityId], references: [id])
+  scheduledDate DateTime
+  scheduledTime String?
+  costOverride  Float?
+}
+
+model Expense {
+  id          String          @id @default(uuid())
+  tripId      String
+  trip        Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  category    ExpenseCategory
+  amount      Float
+  note        String?
+  expenseDate DateTime
+}
+
+model TripShare {
+  id           String   @id @default(uuid())
+  tripId       String
+  trip         Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  viewedAt     DateTime @default(now())
+  viewerIpHash String?
+}
