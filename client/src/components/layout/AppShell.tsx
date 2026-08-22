@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useParams, useLocation } from "react-router-dom";
 
 const navLinks = [
   { to: "/", label: "Board" },
@@ -35,6 +35,33 @@ function Clock() {
   );
 }
 
+/** Trip-scoped links, shown only while viewing a specific trip. */
+function TripNav() {
+  const { id } = useParams<{ id: string }>();
+  const { pathname } = useLocation();
+  if (!id || !pathname.startsWith("/trips/")) return null;
+
+  const links = [
+    { to: `/trips/${id}`, label: "Itinerary" },
+    { to: `/trips/${id}/build`, label: "Build" },
+    { to: `/trips/${id}/cities`, label: "Cities" },
+    { to: `/trips/${id}/budget`, label: "Budget" },
+    { to: `/trips/${id}/calendar`, label: "Calendar" },
+  ];
+
+  return (
+    <div className="border-t border-platform/15 bg-ink px-4 py-2 sm:px-6">
+      <nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-5">
+        {links.map((link) => (
+          <NavLink key={link.to} to={link.to} end className={navLinkClass}>
+            {link.label}
+          </NavLink>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-platform">
@@ -56,6 +83,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Clock />
         </div>
       </header>
+      <TripNav />
       <main>{children}</main>
     </div>
   );
