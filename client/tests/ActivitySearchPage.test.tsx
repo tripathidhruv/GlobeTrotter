@@ -117,7 +117,7 @@ describe("ActivitySearchPage", () => {
 
   it("shows cost and duration in font-mono", async () => {
     renderPage();
-    const duration = await screen.findByText("120min");
+    const duration = await screen.findByText("120MIN");
     const cost = screen.getByText("$45");
     expect(duration.className).toContain("font-mono");
     expect(cost.className).toContain("font-mono");

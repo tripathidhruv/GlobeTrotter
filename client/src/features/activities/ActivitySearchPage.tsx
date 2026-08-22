@@ -15,7 +15,7 @@ import { ZoomImage } from "../../components/ui/ZoomImage";
 const CATEGORIES = ["sightseeing", "food", "leisure", "adventure"];
 
 const inputClass =
-  "w-full rounded-sm border border-rail bg-white px-3 py-2 text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit";
+  "w-full rounded-sm border border-platform/25 bg-ink px-3 py-2 text-platform outline-none transition-colors placeholder:text-platform/30 focus:border-signal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal [color-scheme:dark]";
 
 function formatDate(iso: string) {
   return iso.slice(0, 10);
@@ -108,7 +108,7 @@ function ActivityPhoto({ activity, stop }: { activity: Activity; stop: TripStop 
   const [failed, setFailed] = useState(false);
   const src = activity.imageUrl ?? stop?.city.imageUrl ?? null;
   if (!src || failed) {
-    return <div className="h-20 w-28 flex-shrink-0 rounded-sm bg-board" />;
+    return <div className="absolute inset-0 bg-board" />;
   }
   return (
     <img
@@ -116,7 +116,7 @@ function ActivityPhoto({ activity, stop }: { activity: Activity; stop: TripStop 
       alt=""
       loading="lazy"
       onError={() => setFailed(true)}
-      className="h-20 w-28 flex-shrink-0 rounded-sm object-cover transition-all duration-300 group-hover:scale-105 group-hover:brightness-110"
+      className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
     />
   );
 }
@@ -158,32 +158,36 @@ function ActivityRow({
   }
 
   const content = (
-    <div className="group border-b border-rail py-4 transition-colors hover:bg-platform/60">
-      <div className="flex gap-4">
-        <ActivityPhoto activity={activity} stop={stop} />
-        <div className="flex min-w-0 flex-1 items-start justify-between gap-4 px-1">
+    <div className="group relative isolate min-h-[132px] overflow-hidden border-b border-platform/10 text-platform">
+      <ActivityPhoto activity={activity} stop={stop} />
+      {/* Scrim: dark enough on the left for the title, clearing to the right. */}
+      <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/85 to-ink/55 transition-opacity duration-300 group-hover:opacity-90" />
+      <div className="relative flex gap-4 p-5">
+        <div className="flex min-w-0 flex-1 items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <button
               type="button"
               onClick={() => setExpanded((v) => !v)}
               className="text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit"
             >
-              <h3 className="font-display text-base uppercase tracking-board text-ink">
+              <h3 className="font-display text-xl uppercase tracking-board text-platform transition-colors group-hover:text-signal">
                 {activity.name}
               </h3>
-              <span className="mt-1 inline-block rounded-sm border border-rail px-2 py-0.5 font-mono text-[10px] uppercase tracking-board text-mute">
+              <span className="mt-2 inline-block rounded-sm border border-platform/30 bg-ink/50 px-2 py-0.5 font-mono text-[10px] uppercase tracking-board text-platform/80">
                 {activity.category}
               </span>
             </button>
             {expanded && activity.description && (
               <div className="mt-3 max-w-xl">
-                <p className="text-sm text-mute">{activity.description}</p>
+                <p className="text-sm text-platform/70">{activity.description}</p>
               </div>
             )}
           </div>
-          <div className="flex-shrink-0 text-right text-sm text-mute">
-            <div className="font-mono">{activity.estDurationMinutes}min</div>
-            <div className="font-mono text-ink">{money(activity.estCost)}</div>
+          <div className="flex-shrink-0 text-right">
+            <div className="font-mono text-xs text-platform/60">
+              {activity.estDurationMinutes}MIN
+            </div>
+            <div className="font-mono text-2xl text-signal">{money(activity.estCost)}</div>
           </div>
           <div className="flex-shrink-0">
             {alreadyAttached ? (
@@ -205,7 +209,7 @@ function ActivityRow({
         </div>
       </div>
       {attaching && stop && !alreadyAttached && (
-        <div className="px-1 pl-[7.5rem]">
+        <div className="relative border-t border-platform/15 bg-ink/80 px-5 py-4">
           <AttachForm
             stop={stop}
             activity={activity}
@@ -416,7 +420,7 @@ export function ActivitySearchPage() {
                 <h2 className="mb-2 font-display text-sm uppercase tracking-board text-mute">
                   Already attached to {selectedStop.city.name}
                 </h2>
-                <div className="rounded-sm border border-rail bg-white px-4">
+                <div className="overflow-hidden rounded-sm border border-rail">
                   {selectedStop.activities.map((sa) => (
                     <AttachedRow key={sa.id} stopActivity={sa} tripId={tripId!} />
                   ))}
@@ -438,7 +442,7 @@ export function ActivitySearchPage() {
                 <p className="text-mute">No activities found. Try different filters.</p>
               )}
 
-            <div className="rounded-sm border border-rail bg-white px-4">
+            <div className="overflow-hidden rounded-sm border border-rail">
               {filteredActivities?.map((activity, i) => (
                 <ActivityRow
                   key={activity.id}
