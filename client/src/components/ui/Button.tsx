@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ButtonHTMLAttributes } from "react";
 
 type Variant = "primary" | "secondary" | "ghost";
@@ -14,11 +14,12 @@ export function Button({
   className = "",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
-  return (
-    <motion.button
-      whileTap={{ scale: 0.98 }}
-      className={`rounded-sm px-5 py-2.5 font-display text-sm font-semibold uppercase tracking-board transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit ${variants[variant]} ${className}`}
-      {...(props as any)}
-    />
-  );
+  const reduce = useReducedMotion();
+  const classes = `rounded-sm px-5 py-2.5 font-display text-sm font-semibold uppercase tracking-board transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit ${variants[variant]} ${className}`;
+
+  if (reduce) {
+    return <button className={classes} {...(props as any)} />;
+  }
+
+  return <motion.button whileTap={{ scale: 0.98 }} className={classes} {...(props as any)} />;
 }

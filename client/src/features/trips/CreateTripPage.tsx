@@ -6,13 +6,28 @@ import { Button } from "../../components/ui/Button";
 const inputClass =
   "w-full rounded-sm border border-rail bg-white px-3 py-2 text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-transit";
 
+interface FieldErrors {
+  name?: string;
+  endDate?: string;
+  coverPhotoUrl?: string;
+}
+
+function isValidHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function CreateTripPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [coverPhotoUrl, setCoverPhotoUrl] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { mutateAsync, isPending } = useCreateTrip();
   const navigate = useNavigate();
@@ -21,15 +36,21 @@ export function CreateTripPage() {
     e.preventDefault();
     setSubmitError(null);
 
+    const errors: FieldErrors = {};
+    const trimmedCoverPhotoUrl = coverPhotoUrl.trim();
+
     if (name.trim().length === 0) {
-      setValidationError("Trip name is required.");
-      return;
+      errors.name = "Trip name is required.";
     }
     if (startDate && endDate && endDate < startDate) {
-      setValidationError("End date must be on or after the start date.");
-      return;
+      errors.endDate = "End date must be on or after the start date.";
     }
-    setValidationError(null);
+    if (trimmedCoverPhotoUrl && !isValidHttpUrl(trimmedCoverPhotoUrl)) {
+      errors.coverPhotoUrl = "Enter a valid image URL starting with http:// or https://.";
+    }
+
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     try {
       const trip = await mutateAsync({
@@ -37,7 +58,7 @@ export function CreateTripPage() {
         description,
         startDate,
         endDate,
-        coverPhotoUrl: coverPhotoUrl.trim() ? coverPhotoUrl.trim() : undefined,
+        coverPhotoUrl: trimmedCoverPhotoUrl ? trimmedCoverPhotoUrl : undefined,
       });
       navigate(`/trips/${trip.id}/build`);
     } catch {
@@ -67,7 +88,14 @@ export function CreateTripPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className={inputClass}
+              aria-invalid={!!fieldErrors.name}
+              aria-describedby={fieldErrors.name ? "name-error" : undefined}
             />
+            {fieldErrors.name && (
+              <p id="name-error" role="alert" className="mt-1 text-sm text-signal">
+                {fieldErrors.name}
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -92,7 +120,14 @@ export function CreateTripPage() {
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 className={`${inputClass} font-mono`}
+                aria-invalid={!!fieldErrors.endDate}
+                aria-describedby={fieldErrors.endDate ? "end-error" : undefined}
               />
+              {fieldErrors.endDate && (
+                <p id="end-error" role="alert" className="mt-1 text-sm text-signal">
+                  {fieldErrors.endDate}
+                </p>
+              )}
             </div>
           </div>
           <div>
@@ -117,14 +152,16 @@ export function CreateTripPage() {
               value={coverPhotoUrl}
               onChange={(e) => setCoverPhotoUrl(e.target.value)}
               className={inputClass}
+              aria-invalid={!!fieldErrors.coverPhotoUrl}
+              aria-describedby={fieldErrors.coverPhotoUrl ? "coverPhotoUrl-error" : undefined}
             />
+            {fieldErrors.coverPhotoUrl && (
+              <p id="coverPhotoUrl-error" role="alert" className="mt-1 text-sm text-signal">
+                {fieldErrors.coverPhotoUrl}
+              </p>
+            )}
           </div>
 
-          {validationError && (
-            <p role="alert" className="text-sm text-signal">
-              {validationError}
-            </p>
-          )}
           {submitError && (
             <p role="alert" className="text-sm text-signal">
               {submitError}

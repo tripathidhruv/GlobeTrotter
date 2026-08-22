@@ -47,22 +47,45 @@ describe("CreateTripPage", () => {
     });
   });
 
-  it("shows an inline error and does not submit when name is empty", async () => {
+  it("shows an inline error and does not submit when name is empty, associated via aria-describedby/aria-invalid", async () => {
     render(<MemoryRouter><CreateTripPage /></MemoryRouter>);
     fireEvent.change(screen.getByLabelText("Start date"), { target: { value: "2026-08-01" } });
     fireEvent.change(screen.getByLabelText("End date"), { target: { value: "2026-08-10" } });
     fireEvent.click(screen.getByRole("button", { name: "Save trip" }));
-    expect(await screen.findByText(/trip name is required/i)).toBeInTheDocument();
+    const error = await screen.findByText(/trip name is required/i);
+    expect(error).toBeInTheDocument();
+    const nameInput = screen.getByLabelText("Trip name");
+    expect(nameInput).toHaveAttribute("aria-invalid", "true");
+    expect(nameInput).toHaveAttribute("aria-describedby", error.id);
     expect(mutateAsync).not.toHaveBeenCalled();
   });
 
-  it("shows an inline error and does not submit when end date is before start date", async () => {
+  it("shows an inline error and does not submit when end date is before start date, associated via aria-describedby/aria-invalid", async () => {
     render(<MemoryRouter><CreateTripPage /></MemoryRouter>);
     fireEvent.change(screen.getByLabelText("Trip name"), { target: { value: "Iceland Loop" } });
     fireEvent.change(screen.getByLabelText("Start date"), { target: { value: "2026-08-10" } });
     fireEvent.change(screen.getByLabelText("End date"), { target: { value: "2026-08-01" } });
     fireEvent.click(screen.getByRole("button", { name: "Save trip" }));
-    expect(await screen.findByText(/end date must be on or after the start date/i)).toBeInTheDocument();
+    const error = await screen.findByText(/end date must be on or after the start date/i);
+    expect(error).toBeInTheDocument();
+    const endInput = screen.getByLabelText("End date");
+    expect(endInput).toHaveAttribute("aria-invalid", "true");
+    expect(endInput).toHaveAttribute("aria-describedby", error.id);
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("shows an inline error and does not submit when the cover photo URL is malformed", async () => {
+    render(<MemoryRouter><CreateTripPage /></MemoryRouter>);
+    fireEvent.change(screen.getByLabelText("Trip name"), { target: { value: "Iceland Loop" } });
+    fireEvent.change(screen.getByLabelText("Start date"), { target: { value: "2026-08-01" } });
+    fireEvent.change(screen.getByLabelText("End date"), { target: { value: "2026-08-10" } });
+    fireEvent.change(screen.getByLabelText("Cover photo URL"), { target: { value: "not-a-url" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save trip" }));
+    const error = await screen.findByText(/enter a valid image url/i);
+    expect(error).toBeInTheDocument();
+    const coverInput = screen.getByLabelText("Cover photo URL");
+    expect(coverInput).toHaveAttribute("aria-invalid", "true");
+    expect(coverInput).toHaveAttribute("aria-describedby", error.id);
     expect(mutateAsync).not.toHaveBeenCalled();
   });
 

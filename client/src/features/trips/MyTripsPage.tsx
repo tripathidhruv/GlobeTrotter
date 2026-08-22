@@ -4,9 +4,23 @@ import { Link } from "react-router-dom";
 import { useTrips, useDeleteTrip, type Trip } from "./useTrips";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
+import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 
 function formatDate(iso: string) {
   return iso.slice(0, 10);
+}
+
+function TripCoverImage({ trip }: { trip: Trip }) {
+  const [failed, setFailed] = useState(false);
+  if (!trip.coverPhotoUrl || failed) return null;
+  return (
+    <img
+      src={trip.coverPhotoUrl}
+      alt={trip.name}
+      className="h-36 w-full object-cover"
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 function TripCardContent({
@@ -14,17 +28,11 @@ function TripCardContent({
   onRequestDelete,
 }: {
   trip: Trip;
-  onRequestDelete: (id: string) => void;
+  onRequestDelete: (id: string, trigger: HTMLElement) => void;
 }) {
   return (
     <Card className="p-0">
-      {trip.coverPhotoUrl && (
-        <img
-          src={trip.coverPhotoUrl}
-          alt={trip.name}
-          className="h-36 w-full object-cover"
-        />
-      )}
+      <TripCoverImage trip={trip} />
       <div className="p-5">
         <h2 className="font-display text-lg uppercase tracking-board">{trip.name}</h2>
         <p className="mt-1 font-mono text-xs text-mute">
@@ -49,7 +57,7 @@ function TripCardContent({
           </Link>
           <button
             type="button"
-            onClick={() => onRequestDelete(trip.id)}
+            onClick={(e) => onRequestDelete(trip.id, e.currentTarget)}
             className="font-display uppercase tracking-board text-signal hover:underline"
           >
             Delete
@@ -69,7 +77,7 @@ function TripCard({
   trip: Trip;
   index: number;
   reduce: boolean;
-  onRequestDelete: (id: string) => void;
+  onRequestDelete: (id: string, trigger: HTMLElement) => void;
 }) {
   if (reduce) {
     return <TripCardContent trip={trip} onRequestDelete={onRequestDelete} />;
@@ -94,6 +102,14 @@ export function MyTripsPage() {
   const reduce = useReducedMotion() ?? false;
 
   const pendingTrip = trips?.find((t) => t.id === pendingDeleteId);
+
+  function requestDelete(id: string, trigger: HTMLElement) {
+    // The trigger receives focus explicitly so ConfirmDialog can restore focus to it on close,
+    // even in test environments where a raw click doesn't move focus by itself.
+    trigger.focus();
+    setDeleteError(null);
+    setPendingDeleteId(id);
+  }
 
   function confirmDelete() {
     if (!pendingDeleteId) return;
@@ -137,35 +153,29 @@ export function MyTripsPage() {
               trip={trip}
               index={i}
               reduce={reduce}
-              onRequestDelete={setPendingDeleteId}
+              onRequestDelete={requestDelete}
             />
           ))}
         </div>
       </div>
 
-      {pendingTrip && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 px-4">
-          <div className="w-full max-w-sm rounded-sm border border-rail bg-white p-6">
-            <h2 className="font-display text-lg uppercase tracking-board">Delete this trip?</h2>
-            <p className="mt-2 text-sm text-mute">
+      <ConfirmDialog
+        open={!!pendingTrip}
+        title="Delete this trip?"
+        description={
+          pendingTrip && (
+            <>
               This will permanently delete <span className="text-ink">{pendingTrip.name}</span>.
               This action cannot be undone.
-            </p>
-            <div className="mt-6 flex justify-end gap-3">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setPendingDeleteId(null)}
-              >
-                Cancel
-              </Button>
-              <Button type="button" onClick={confirmDelete} disabled={isDeleting}>
-                Confirm delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </>
+          )
+        }
+        confirmLabel="Confirm delete"
+        pendingLabel="Deleting..."
+        isConfirming={isDeleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </div>
   );
 }

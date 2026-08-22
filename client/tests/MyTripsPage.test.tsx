@@ -151,4 +151,108 @@ describe("MyTripsPage", () => {
     expect(screen.queryByText(/delete this trip\?/i)).not.toBeInTheDocument();
     expect(mutate).not.toHaveBeenCalled();
   });
+
+  it("renders the delete confirmation as an accessible dialog and restores focus to the trigger on cancel", async () => {
+    vi.mocked(useTrips).mockReturnValue({
+      data: [
+        {
+          id: "1",
+          name: "Japan Trip",
+          startDate: "2026-09-01",
+          endDate: "2026-09-10",
+          ownerId: "u1",
+          _count: { stops: 3 },
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    } as any);
+    renderPage();
+
+    const deleteButton = screen.getByRole("button", { name: /delete/i });
+    fireEvent.click(deleteButton);
+
+    const dialog = await screen.findByRole("dialog", { name: /delete this trip\?/i });
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toHaveFocus();
+
+    fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(deleteButton).toHaveFocus();
+  });
+
+  it("cancels the delete confirmation on Escape and restores focus to the trigger", async () => {
+    vi.mocked(useTrips).mockReturnValue({
+      data: [
+        {
+          id: "1",
+          name: "Japan Trip",
+          startDate: "2026-09-01",
+          endDate: "2026-09-10",
+          ownerId: "u1",
+          _count: { stops: 3 },
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    } as any);
+    renderPage();
+
+    const deleteButton = screen.getByRole("button", { name: /delete/i });
+    fireEvent.click(deleteButton);
+    await screen.findByRole("dialog");
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(deleteButton).toHaveFocus();
+    expect(mutate).not.toHaveBeenCalled();
+  });
+
+  it("shows a busy, pending label on the confirm button while deletion is in flight", async () => {
+    vi.mocked(useDeleteTrip).mockReturnValue({ mutate, isPending: true } as any);
+    vi.mocked(useTrips).mockReturnValue({
+      data: [
+        {
+          id: "1",
+          name: "Japan Trip",
+          startDate: "2026-09-01",
+          endDate: "2026-09-10",
+          ownerId: "u1",
+          _count: { stops: 3 },
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    } as any);
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /delete/i }));
+    await screen.findByRole("dialog");
+
+    const pendingButton = screen.getByRole("button", { name: /deleting/i });
+    expect(pendingButton).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("hides the cover image frame if the image fails to load", () => {
+    vi.mocked(useTrips).mockReturnValue({
+      data: [
+        {
+          id: "1",
+          name: "Japan Trip",
+          startDate: "2026-09-01",
+          endDate: "2026-09-10",
+          ownerId: "u1",
+          coverPhotoUrl: "https://example.com/broken.jpg",
+          _count: { stops: 3 },
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    } as any);
+    renderPage();
+
+    const img = screen.getByRole("img", { name: /japan trip/i });
+    fireEvent.error(img);
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
 });
