@@ -8,6 +8,8 @@ import { AppShell } from "./components/layout/AppShell";
 import { LoginPage } from "./features/auth/LoginPage";
 import { SignupPage } from "./features/auth/SignupPage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
+import { CreateTripPage } from "./features/trips/CreateTripPage";
+import { MyTripsPage } from "./features/trips/MyTripsPage";
 
 export default function App() {
   useLenis();
@@ -24,6 +26,26 @@ export default function App() {
                 <ProtectedRoute>
                   <AppShell>
                     <DashboardPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trips/new"
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <CreateTripPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trips"
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <MyTripsPage />
                   </AppShell>
                 </ProtectedRoute>
               }

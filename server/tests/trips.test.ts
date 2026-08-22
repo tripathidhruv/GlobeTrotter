@@ -23,6 +23,33 @@ describe("GET /api/trips", () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
   });
+
+  it("includes a stop count for each trip", async () => {
+    const trip = await db.trip.create({
+      data: {
+        ownerId: "test-user-1",
+        name: "Trip With Stops",
+        startDate: new Date("2026-06-01"),
+        endDate: new Date("2026-06-10"),
+      },
+    });
+    const city = await db.city.create({
+      data: { name: "Test City", country: "Testland", costIndex: 50, popularityScore: 1 },
+    });
+    await db.stop.create({
+      data: {
+        tripId: trip.id,
+        cityId: city.id,
+        orderIndex: 0,
+        arrivalDate: new Date("2026-06-01"),
+        departureDate: new Date("2026-06-03"),
+      },
+    });
+
+    const res = await request(app).get("/api/trips");
+    expect(res.status).toBe(200);
+    expect(res.body[0]._count).toEqual({ stops: 1 });
+  });
 });
 
 describe("POST /api/trips", () => {

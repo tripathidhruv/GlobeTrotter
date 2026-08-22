@@ -18,6 +18,7 @@ router.get("/", verifySupabaseJwt, async (req: AuthedRequest, res) => {
     where: {
       OR: [{ ownerId: req.userId! }, { collaborators: { some: { userId: req.userId! } } }],
     },
+    include: { _count: { select: { stops: true } } },
     orderBy: { createdAt: "desc" },
   });
   res.json(trips);
