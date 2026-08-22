@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useProfile, useUpdateProfile, useDeleteAccount } from "./useProfile";
 import { useTrips } from "../trips/useTrips";
+import { useCities } from "../cities/useCities";
 import { supabase } from "../../lib/supabase";
 import { Button } from "../../components/ui/Button";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
+import { ZoomImage } from "../../components/ui/ZoomImage";
+import { SceneryBand } from "../../components/ui/SceneryBand";
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -26,7 +30,7 @@ function Reveal({
 }: {
   index: number;
   reduce: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }) {
   if (reduce) return <div className={className}>{children}</div>;
@@ -51,6 +55,7 @@ export function SettingsPage() {
   const { mutate: updateProfile, isPending: isSaving } = useUpdateProfile();
   const { mutate: deleteAccount, isPending: isDeleting } = useDeleteAccount();
   const { data: trips } = useTrips();
+  const { data: cities } = useCities();
   const reduce = useReducedMotion() ?? false;
   const navigate = useNavigate();
 
@@ -114,15 +119,31 @@ export function SettingsPage() {
       ?.map((trip) => trip.stops?.[0]?.city)
       .filter((city): city is { name: string; country: string; imageUrl?: string | null } => !!city) ?? [];
 
+  const heroImage = destinations[0]?.imageUrl ?? cities?.[0]?.imageUrl ?? null;
+  const bandImage = destinations[1]?.imageUrl ?? cities?.[1]?.imageUrl ?? heroImage;
+
   return (
     <div>
       <section className="relative isolate overflow-hidden bg-ink text-platform">
-        <div className="mx-auto max-w-4xl px-6 py-20">
+        {heroImage && <ZoomImage src={heroImage} className="opacity-40" from={1.02} to={1.3} />}
+        <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/85 to-ink/55" />
+
+        <div className="relative mx-auto max-w-4xl px-6 py-24">
           <p className="font-mono text-xs uppercase tracking-board text-signal">Passenger profile</p>
           <h1 className="mt-3 font-display text-5xl uppercase leading-none tracking-board sm:text-6xl">
             {profile?.name || "Settings"}
           </h1>
           <p className="mt-3 font-mono text-sm text-platform/60">{profile?.email}</p>
+          {profile && (
+            <div className="mt-8 flex flex-wrap gap-x-10 gap-y-3 border-t border-platform/20 pt-5 font-mono text-xs uppercase text-platform/60">
+              <span>
+                Role <span className="text-signal">{profile.role}</span>
+              </span>
+              <span>
+                Trips logged <span className="text-signal">{String(trips?.length ?? 0).padStart(2, "0")}</span>
+              </span>
+            </div>
+          )}
         </div>
       </section>
 
@@ -137,14 +158,14 @@ export function SettingsPage() {
             <Reveal index={0} reduce={reduce}>
               <form
                 onSubmit={handleSave}
-                className="rounded-sm border border-rail bg-board/40 p-6"
+                className="rounded-sm border border-rail bg-board p-8"
               >
                 <h2 className="font-display text-lg uppercase tracking-board text-platform">
                   Ticket details
                 </h2>
 
-                <div className="mt-6 grid gap-5">
-                  <div className="border-b border-platform/10 pb-5">
+                <div className="mt-8 grid gap-6">
+                  <div className="border-b border-rail/40 pb-6">
                     <label htmlFor="name" className="block font-mono text-xs uppercase text-mute">
                       Name
                     </label>
@@ -158,7 +179,7 @@ export function SettingsPage() {
                     />
                   </div>
 
-                  <div className="border-b border-platform/10 pb-5">
+                  <div className="border-b border-rail/40 pb-6">
                     <label htmlFor="email" className="block font-mono text-xs uppercase text-mute">
                       Email
                     </label>
@@ -175,7 +196,7 @@ export function SettingsPage() {
                     </p>
                   </div>
 
-                  <div className="border-b border-platform/10 pb-5">
+                  <div className="border-b border-rail/40 pb-6">
                     <label htmlFor="avatarUrl" className="block font-mono text-xs uppercase text-mute">
                       Avatar URL
                     </label>
@@ -219,7 +240,7 @@ export function SettingsPage() {
                   </p>
                 )}
 
-                <div className="mt-6">
+                <div className="mt-8">
                   <Button type="submit" disabled={isSaving} aria-busy={isSaving}>
                     {isSaving ? "Saving..." : "Save changes"}
                   </Button>
@@ -228,7 +249,7 @@ export function SettingsPage() {
             </Reveal>
 
             <Reveal index={1} reduce={reduce} className="mt-10">
-              <div className="rounded-sm border border-rail bg-board/40 p-6">
+              <div className="rounded-sm border border-rail bg-board p-8">
                 <h2 className="font-display text-lg uppercase tracking-board text-platform">
                   Destinations visited on your trips
                 </h2>
@@ -238,11 +259,11 @@ export function SettingsPage() {
                 {destinations.length === 0 ? (
                   <p className="mt-4 text-sm text-mute">No destinations yet. Plan a trip to see them here.</p>
                 ) : (
-                  <ul className="mt-4 divide-y divide-platform/10">
+                  <ul className="mt-6 divide-y divide-rail/40">
                     {destinations.map((city, i) => (
                       <li
                         key={`${city.name}-${city.country}-${i}`}
-                        className="flex items-center justify-between py-3 text-sm"
+                        className="flex items-center justify-between py-4 text-sm"
                       >
                         <span className="font-display uppercase tracking-board text-platform">
                           {city.name}
@@ -254,17 +275,33 @@ export function SettingsPage() {
                 )}
               </div>
             </Reveal>
+          </>
+        )}
+      </div>
 
-            <Reveal index={2} reduce={reduce} className="mt-10">
-              <div className="rounded-sm border border-signal/50 bg-ink p-6">
-                <h2 className="font-display text-lg uppercase tracking-board text-signal">
+      {profile && (
+        <SceneryBand
+          imageUrl={bandImage}
+          eyebrow="On file"
+          title="Every stop remembers you"
+          caption="Your saved language, avatar and trip history travel with your account."
+        />
+      )}
+
+      {profile && (
+        <section className="mt-4 bg-ink py-16 text-platform">
+          <div className="mx-auto max-w-4xl px-6">
+            <Reveal index={2} reduce={reduce}>
+              <div className="rounded-sm border border-signal/50 bg-board p-8">
+                <p className="font-mono text-xs uppercase tracking-board text-signal">Irreversible</p>
+                <h2 className="mt-2 font-display text-2xl uppercase tracking-board text-signal">
                   Danger zone
                 </h2>
-                <p className="mt-2 text-sm text-platform/70">
+                <p className="mt-3 max-w-lg text-sm text-platform/70">
                   Deleting your account permanently removes your profile and all of your trips. This
                   cannot be undone.
                 </p>
-                <div className="mt-4">
+                <div className="mt-6 border-t border-platform/10 pt-6">
                   <Button
                     type="button"
                     variant="ghost"
@@ -281,9 +318,9 @@ export function SettingsPage() {
                 )}
               </div>
             </Reveal>
-          </>
-        )}
-      </div>
+          </div>
+        </section>
+      )}
 
       <ConfirmDialog
         open={deleteOpen}

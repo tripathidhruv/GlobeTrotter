@@ -5,6 +5,7 @@ import { useReducedMotion } from "framer-motion";
 import { SettingsPage } from "../src/features/settings/SettingsPage";
 import { useProfile, useUpdateProfile, useDeleteAccount } from "../src/features/settings/useProfile";
 import { useTrips } from "../src/features/trips/useTrips";
+import { useCities } from "../src/features/cities/useCities";
 
 vi.mock("../src/features/settings/useProfile", () => ({
   useProfile: vi.fn(),
@@ -14,6 +15,10 @@ vi.mock("../src/features/settings/useProfile", () => ({
 
 vi.mock("../src/features/trips/useTrips", () => ({
   useTrips: vi.fn(),
+}));
+
+vi.mock("../src/features/cities/useCities", () => ({
+  useCities: vi.fn(),
 }));
 
 vi.mock("framer-motion", async (importOriginal) => {
@@ -63,6 +68,7 @@ describe("SettingsPage", () => {
     vi.mocked(useUpdateProfile).mockReturnValue({ mutate: updateMutate, isPending: false } as any);
     vi.mocked(useDeleteAccount).mockReturnValue({ mutate: deleteMutate, isPending: false } as any);
     vi.mocked(useTrips).mockReturnValue({ data: [] } as any);
+    vi.mocked(useCities).mockReturnValue({ data: [] } as any);
     vi.mocked(useProfile).mockReturnValue({
       data: baseProfile,
       isLoading: false,

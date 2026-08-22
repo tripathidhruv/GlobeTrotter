@@ -4,10 +4,15 @@ import { MemoryRouter } from "react-router-dom";
 import { useReducedMotion } from "framer-motion";
 import { AdminPage } from "../src/features/admin/AdminPage";
 import { useAdminStats, useAdminUsers } from "../src/features/admin/useAdminStats";
+import { useCities } from "../src/features/cities/useCities";
 
 vi.mock("../src/features/admin/useAdminStats", () => ({
   useAdminStats: vi.fn(),
   useAdminUsers: vi.fn(),
+}));
+
+vi.mock("../src/features/cities/useCities", () => ({
+  useCities: vi.fn(),
 }));
 
 vi.mock("framer-motion", async (importOriginal) => {
@@ -81,6 +86,7 @@ function renderPage() {
 describe("AdminPage", () => {
   beforeEach(() => {
     vi.mocked(useReducedMotion).mockReturnValue(true);
+    vi.mocked(useCities).mockReturnValue({ data: [] } as any);
   });
 
   it("renders stat tiles, top cities/activities, and the user table", () => {
