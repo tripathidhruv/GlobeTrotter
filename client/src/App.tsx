@@ -7,6 +7,7 @@ import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AppShell } from "./components/layout/AppShell";
 import { LoginPage } from "./features/auth/LoginPage";
 import { SignupPage } from "./features/auth/SignupPage";
+import { DashboardPage } from "./features/dashboard/DashboardPage";
 
 export default function App() {
   useLenis();
@@ -22,7 +23,7 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <AppShell>
-                    <div>Dashboard placeholder</div>
+                    <DashboardPage />
                   </AppShell>
                 </ProtectedRoute>
               }
