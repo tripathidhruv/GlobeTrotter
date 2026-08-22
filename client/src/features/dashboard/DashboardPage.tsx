@@ -9,6 +9,7 @@ import { VideoBackdrop } from "../../components/ui/VideoBackdrop";
 import { Ticker } from "../../components/ui/Ticker";
 import { SceneryBand } from "../../components/ui/SceneryBand";
 import { CityDialog } from "../../components/ui/CityDialog";
+import { FeatureReel, type ReelItem } from "../../components/ui/FeatureReel";
 
 const HERO_CLIPS = [
   { src: "/video/paris.mp4", label: "Paris" },
@@ -47,73 +48,6 @@ function findNearestUpcomingTrip(trips: Trip[] | undefined): Trip | undefined {
 
 
 /* -------------------------------------------------------------------------- */
-
-const BOARD_STATUS = ["ON TIME", "BOARDING", "SCHEDULED", "ON TIME", "GATE OPEN"];
-
-/**
- * Airport-style departures panel for the hero. Reads the user's real trips and
- * presents them as board rows; the status column is decorative, derived from the
- * row index so it stays stable between renders.
- */
-function DepartureBoard({ trips, reduce }: { trips: Trip[] | undefined; reduce: boolean }) {
-  const rows = (trips ?? []).slice(0, 5);
-
-  const panel = (
-    <div className="rounded-sm border border-platform/20 bg-ink/70 backdrop-blur-sm">
-      <div className="flex items-center justify-between border-b border-platform/20 px-4 py-3">
-        <span className="font-display text-sm uppercase tracking-board text-platform">
-          Departures
-        </span>
-        <span className="flex items-center gap-2 font-mono text-[10px] uppercase text-platform/60">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-signal" />
-          Live
-        </span>
-      </div>
-
-      {rows.length === 0 ? (
-        <p className="px-4 py-8 font-mono text-xs text-platform/50">
-          No services scheduled — plan a trip to fill the board.
-        </p>
-      ) : (
-        <ul className="divide-y divide-platform/10">
-          {rows.map((trip, i) => (
-            <li
-              key={trip.id}
-              className="grid grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3"
-            >
-              <span className="font-mono text-xs text-signal">
-                {formatDate(trip.startDate).slice(5).replace("-", "")}
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate font-display text-base uppercase tracking-board text-platform">
-                  {trip.name}
-                </span>
-                <span className="font-mono text-[10px] text-platform/50">
-                  {trip._count?.stops ?? 0} STOPS · {nights(trip.startDate, trip.endDate)}N
-                </span>
-              </span>
-              <span className="font-mono text-[10px] uppercase text-platform/70">
-                {BOARD_STATUS[i % BOARD_STATUS.length]}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-
-  if (reduce) return panel;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 24 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.25, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-    >
-      {panel}
-    </motion.div>
-  );
-}
 
 function TripRowContent({ trip, index }: { trip: Trip; index: number }) {
   const stops = trip._count?.stops ?? 0;
@@ -239,6 +173,16 @@ export function DashboardPage() {
   const nearest = findNearestUpcomingTrip(trips);
   const { data: budget, isError: budgetError } = useTripBudget(nearest?.id);
 
+  const reelItems: ReelItem[] = HERO_CLIPS.map((clip) => {
+    const city = cities?.find((c) => c.name === clip.label);
+    return {
+      src: clip.src,
+      label: clip.label,
+      meta: city ? `${city.country} · COST ${city.costIndex}` : undefined,
+      poster: city?.imageUrl ?? undefined,
+    };
+  });
+
   const tripCount = trips?.length ?? 0;
   const stopCount = trips?.reduce((sum, t) => sum + (t._count?.stops ?? 0), 0) ?? 0;
 
@@ -301,7 +245,7 @@ export function DashboardPage() {
           </div>
           </div>
 
-          <DepartureBoard trips={trips} reduce={reduce} />
+          <FeatureReel items={reelItems} />
         </motion.div>
 
         {!reduce && (
