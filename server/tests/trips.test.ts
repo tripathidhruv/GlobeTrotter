@@ -1,7 +1,7 @@
 import request from "supertest";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import app from "../src/app";
-import db from "../src/db";
+import app from "../src/app.js";
+import db from "../src/db.js";
 
 vi.mock("../src/middleware/auth", () => ({
   verifySupabaseJwt: (req: any, _res: any, next: any) => {

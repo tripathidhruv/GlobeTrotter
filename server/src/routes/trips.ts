@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
-import db from "../db";
-import { verifySupabaseJwt, AuthedRequest } from "../middleware/auth";
+import db from "../db.js";
+import { verifySupabaseJwt, type AuthedRequest } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -16,7 +16,7 @@ const createTripSchema = z.object({
 router.get("/", verifySupabaseJwt, async (req: AuthedRequest, res) => {
   const trips = await db.trip.findMany({
     where: {
-      OR: [{ ownerId: req.userId }, { collaborators: { some: { userId: req.userId } } }],
+      OR: [{ ownerId: req.userId! }, { collaborators: { some: { userId: req.userId! } } }],
     },
     orderBy: { createdAt: "desc" },
   });
@@ -32,8 +32,8 @@ router.post("/", verifySupabaseJwt, async (req: AuthedRequest, res) => {
     data: {
       ownerId: req.userId!,
       name: parsed.data.name,
-      description: parsed.data.description,
-      coverPhotoUrl: parsed.data.coverPhotoUrl,
+      description: parsed.data.description ?? null,
+      coverPhotoUrl: parsed.data.coverPhotoUrl ?? null,
       startDate: new Date(parsed.data.startDate),
       endDate: new Date(parsed.data.endDate),
     },
