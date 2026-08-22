@@ -11,6 +11,7 @@ import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { CreateTripPage } from "./features/trips/CreateTripPage";
 import { MyTripsPage } from "./features/trips/MyTripsPage";
 import { CitySearchPage } from "./features/cities/CitySearchPage";
+import { ItineraryBuilderPage } from "./features/itinerary/ItineraryBuilderPage";
 
 export default function App() {
   useLenis();
@@ -57,6 +58,16 @@ export default function App() {
                 <ProtectedRoute>
                   <AppShell>
                     <CitySearchPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trips/:id/build"
+              element={
+                <ProtectedRoute>
+                  <AppShell>
+                    <ItineraryBuilderPage />
                   </AppShell>
                 </ProtectedRoute>
               }
